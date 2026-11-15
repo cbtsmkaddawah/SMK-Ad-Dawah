@@ -615,22 +615,31 @@ function aktifkanTampilanUser(res) {
 function logout() {
   showConfirmBS("Apakah Anda yakin ingin keluar dari sistem?", async () => {
     
-    // 1. Cabut koneksi notifikasi akun ini dari browser dan database
+    // 1. Cabut koneksi notifikasi dengan pengaman waktu (Timeout)
     if ('serviceWorker' in navigator && 'PushManager' in window) {
         try {
-            const reg = await navigator.serviceWorker.ready;
-            const sub = await reg.pushManager.getSubscription();
-            if (sub) {
-                await supabaseClient.from('push_subscriptions').delete().eq('subscription_json->>endpoint', sub.endpoint);
-                await sub.unsubscribe(); 
+            // Gunakan Promise.race agar tidak nyangkut selamanya jika SW gagal load (404)
+            const reg = await Promise.race([
+                navigator.serviceWorker.ready,
+                new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout SW")), 2000))
+            ]);
+            
+            if (reg) {
+                const sub = await reg.pushManager.getSubscription();
+                if (sub) {
+                    await supabaseClient.from('push_subscriptions').delete().eq('subscription_json->>endpoint', sub.endpoint);
+                    await sub.unsubscribe(); 
+                }
             }
-        } catch(e) { console.error("Gagal cabut notifikasi:", e); }
+        } catch(e) { 
+            console.warn("Gagal cabut notifikasi (Abaikan jika SW 404):", e); 
+        }
     }
 
-    // 2. Hapus sesi lokal
+    // 2. Hapus sesi lokal (Pasti dieksekusi)
     localStorage.removeItem("sesi_addawah");
 
-    // 3. Sembunyikan Modal Bootstrap terlebih dahulu agar tidak menahan fokus layar
+    // 3. Sembunyikan Modal Bootstrap
     const modalEl = document.getElementById("modalConfirmBS");
     if (modalEl) {
         const modalObj = bootstrap.Modal.getInstance(modalEl);
@@ -639,9 +648,9 @@ function logout() {
         }
     }
 
-    // 4. Setelah modal mulai menutup, baru eksekusi pindah halaman ke etertib.html
+    // 4. Pindah ke halaman login (Berikan jeda animasi)
     setTimeout(() => {
-        window.location.href = "etertib.html"; // Diubah dari index.html menjadi etertib.html
+        window.location.href = "etertib.html"; 
     }, 250);
 
   });
