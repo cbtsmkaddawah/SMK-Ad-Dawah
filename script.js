@@ -628,7 +628,7 @@ function logout() {
     }
 
     localStorage.removeItem("sesi_addawah");
-    window.location.href = "etertib.html"; // <--- MENGARAHKAN PAKSA KE ETERTIB
+    window.location.href = "index.html"; // <--- MENGARAHKAN PAKSA KE ETERTIB
   });
 }
 
