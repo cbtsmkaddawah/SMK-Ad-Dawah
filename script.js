@@ -615,7 +615,7 @@ function aktifkanTampilanUser(res) {
 function logout() {
   showConfirmBS("Apakah Anda yakin ingin keluar dari sistem?", async () => {
     
-    // Cabut koneksi notifikasi akun ini dari browser dan database
+    // 1. Cabut koneksi notifikasi akun ini dari browser dan database
     if ('serviceWorker' in navigator && 'PushManager' in window) {
         try {
             const reg = await navigator.serviceWorker.ready;
@@ -627,8 +627,23 @@ function logout() {
         } catch(e) { console.error("Gagal cabut notifikasi:", e); }
     }
 
+    // 2. Hapus sesi lokal
     localStorage.removeItem("sesi_addawah");
-    window.location.href = "index.html"; // <--- MENGARAHKAN PAKSA KE ETERTIB
+
+    // 3. Sembunyikan Modal Bootstrap terlebih dahulu agar tidak menahan fokus layar
+    const modalEl = document.getElementById("modalConfirmBS");
+    if (modalEl) {
+        const modalObj = bootstrap.Modal.getInstance(modalEl);
+        if (modalObj) {
+            modalObj.hide();
+        }
+    }
+
+    // 4. Setelah modal mulai menutup, baru eksekusi pindah halaman ke etertib.html
+    setTimeout(() => {
+        window.location.href = "etertib.html"; // Diubah dari index.html menjadi etertib.html
+    }, 250);
+
   });
 }
 
