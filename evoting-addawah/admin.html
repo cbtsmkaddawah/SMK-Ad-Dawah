@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin E-Voting — SMK AD-DA'WAH</title>
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- =======================================================
+         VIEW 1: LOGIN RAHASIA ADMIN
+         ======================================================= -->
+    <section id="adminLoginView" class="container py-5">
+        <div class="row justify-content-center align-items-center" style="min-height: 85vh;">
+            <div class="col-12 col-md-7 col-lg-4">
+                <div class="glass-card p-4 p-md-5">
+                    <div class="text-center mb-4">
+                        <div class="mx-auto mb-3 school-logo-wrapper" style="width: 72px; height: 72px;">
+                            <img src="https://i.ibb.co.com/Ngh0x6Rr/Addawah-300x.png" alt="Logo" class="dynamic-school-logo">
+                        </div>
+                        <span class="badge bg-success-subtle text-success rounded-pill px-3 py-1 mb-2 fw-bold">PORTAL ADMINISTRATOR</span>
+                        <h4 class="fw-bold text-dark mb-1">Login Admin E-Voting</h4>
+                        <p class="text-secondary small mb-0 dynamic-school-name">SMK AD-DA'WAH JAKARTA</p>
+                    </div>
+
+                    <form id="adminLoginForm">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary">USERNAME ADMIN</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-person-badge-fill text-success"></i></span>
+                                <input type="text" id="adminUsername" class="form-control" placeholder="admin" required>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-secondary">PASSWORD ADMIN</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-shield-lock-fill text-success"></i></span>
+                                <input type="password" id="adminPassword" class="form-control" placeholder="••••••••" required>
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" id="btnAdminLoginSubmit" class="btn btn-emerald py-2">
+                                <i class="bi bi-unlock-fill me-2"></i>Masuk Dashboard
+                            </button>
+                            <a href="index.html" class="btn btn-light rounded-3 small fw-semibold text-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Kembali ke Halaman Pemilih
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =======================================================
+         VIEW 2: DASHBOARD UTAMA ADMIN
+         ======================================================= -->
+    <div id="adminDashboardView" class="container-fluid d-none">
+        <div class="row">
+            <!-- SIDEBAR NAVIGASI -->
+            <aside class="col-lg-2 admin-sidebar p-3 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex align-items-center gap-3 px-2 py-3 mb-3 border-bottom border-success border-opacity-25">
+                        <div class="school-logo-wrapper" style="width: 46px; height: 46px;">
+                            <img src="https://i.ibb.co.com/Ngh0x6Rr/Addawah-300x.png" alt="Logo" class="dynamic-school-logo">
+                        </div>
+                        <div>
+                            <div class="fw-bold text-white small lh-sm dynamic-school-name">SMK AD-DA'WAH</div>
+                            <span class="badge bg-success text-white" style="font-size: 0.65rem;">PANEL ADMIN</span>
+                        </div>
+                    </div>
+
+                    <nav class="nav flex-column" id="adminTabNav">
+                        <button class="admin-nav-link active" data-target="tabAnalytics">
+                            <i class="bi bi-bar-chart-line-fill"></i> Hasil & Grafik Live
+                        </button>
+                        <button class="admin-nav-link" data-target="tabCandidates">
+                            <i class="bi bi-person-vcard-fill"></i> Data Kandidat
+                        </button>
+                        <button class="admin-nav-link" data-target="tabCategories">
+                            <i class="bi bi-tags-fill"></i> Kategori Pemilihan
+                        </button>
+                        <button class="admin-nav-link" data-target="tabVoters">
+                            <i class="bi bi-people-fill"></i> Akun Pemilih & Excel
+                        </button>
+                        <button class="admin-nav-link" data-target="tabSettings">
+                            <i class="bi bi-palette-fill"></i> Kustomisasi Web
+                        </button>
+                    </nav>
+                </div>
+
+                <div class="pt-3 border-top border-success border-opacity-25">
+                    <a href="index.html" class="btn btn-outline-light btn-sm w-100 rounded-3 mb-2">
+                        <i class="bi bi-box-arrow-up-right me-1"></i>Lihat Bilik Suara
+                    </a>
+                    <button id="btnAdminLogout" class="btn btn-danger btn-sm w-100 rounded-3">
+                        <i class="bi bi-power me-1"></i>Logout Admin
+                    </button>
+                </div>
+            </aside>
+
+            <!-- KONTEN UTAMA DASHBOARD -->
+            <main class="col-lg-10 p-4 p-lg-5">
+                <!-- Header Bar -->
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                    <div>
+                        <h4 class="fw-bold mb-0 text-dark dynamic-election-title">Dashboard Rekapitulasi & Manajemen</h4>
+                        <p class="text-secondary small mb-0">Pantau grafik suara secara *real-time*, kelola data Excel, dan atur tampilan web.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button id="btnRefreshDashboard" class="btn btn-outline-emerald btn-sm px-3 py-2">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Segarkan Data
+                        </button>
+                        <button id="btnExportFullReport" class="btn btn-emerald btn-sm px-3 py-2">
+                            <i class="bi bi-file-earmark-excel-fill me-1"></i>Export Hasil ke Excel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STAT CARDS RINGKASAN -->
+                <div class="row g-3 mb-4">
+                    <div class="col-6 col-xl-3">
+                        <div class="stat-card d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="text-secondary small fw-bold">TOTAL PEMILIH</div>
+                                <h3 class="fw-extrabold mb-0 mt-1" id="statTotalVoters">0</h3>
+                            </div>
+                            <div class="stat-icon bg-success-subtle text-success">
+                                <i class="bi bi-people-fill"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-xl-3">
+                        <div class="stat-card d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="text-secondary small fw-bold">SUDAH MEMILIH</div>
+                                <h3 class="fw-extrabold mb-0 mt-1 text-success" id="statVotedCount">0</h3>
+                            </div>
+                            <div class="stat-icon bg-success text-white">
+                                <i class="bi bi-check2-circle"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-xl-3">
+                        <div class="stat-card d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="text-secondary small fw-bold">BELUM MEMILIH</div>
+                                <h3 class="fw-extrabold mb-0 mt-1 text-danger" id="statUnvotedCount">0</h3>
+                            </div>
+                            <div class="stat-icon bg-danger-subtle text-danger">
+                                <i class="bi bi-hourglass-split"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-xl-3">
+                        <div class="stat-card d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="text-secondary small fw-bold">PARTISIPASI</div>
+                                <h3 class="fw-extrabold mb-0 mt-1 text-primary" id="statTurnoutPercent">0%</h3>
+                            </div>
+                            <div class="stat-icon bg-primary-subtle text-primary">
+                                <i class="bi bi-pie-chart-fill"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===================================================
+                     TAB 1: HASIL & GRAFIK INTERAKTIF (CHART.JS + PODIUM)
+                     =================================================== -->
+                <div id="tabAnalytics" class="admin-tab-pane">
+                    <!-- Podium Pemenang Sementara per Kategori -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold text-uppercase text-secondary mb-0" style="letter-spacing: 0.04em; font-size: 0.78rem;">
+                                Peringkat Teratas per Kategori
+                            </h6>
+                        </div>
+                        <div class="row g-3" id="podiumWinnersContainer">
+                            <!-- Diisi dinamis oleh js/admin.js -->
+                        </div>
+                    </div>
+
+                    <!-- Grafik Interaktif per Kategori -->
+                    <div class="glass-card p-4 p-lg-5">
+                        <div class="row align-items-center justify-content-between gy-3 mb-4 pb-3 border-bottom">
+                            <div class="col-12 col-lg-5">
+                                <h5 class="fw-bold text-dark mb-1">Visualisasi Perolehan Suara</h5>
+                                <p class="text-muted small mb-0">Perbandingan suara kandidat di setiap kategori pemilihan.</p>
+                            </div>
+                            <div class="col-12 col-lg-7 d-flex flex-wrap justify-content-lg-end align-items-center gap-3">
+                                <select id="chartCategoryFilter" class="form-select form-select-sm" style="width: auto; min-width: 230px;">
+                                    <option value="ALL">Semua Kategori (Perbandingan)</option>
+                                </select>
+                                <div class="btn-group btn-group-sm" role="group" aria-label="Tipe Grafik">
+                                    <button type="button" class="btn btn-outline-secondary active px-3" data-chart-type="bar">
+                                        <i class="bi bi-bar-chart-fill me-1"></i>Bar
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary px-3" data-chart-type="horizontalBar">
+                                        <i class="bi bi-text-left me-1"></i>Horizontal
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary px-3" data-chart-type="doughnut">
+                                        <i class="bi bi-pie-chart-fill me-1"></i>Doughnut
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="height: 430px; position: relative;" class="pt-2">
+                            <canvas id="electionResultChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===================================================
+                     TAB 2: CRUD KANDIDAT + IMPORT EXCEL KANDIDAT
+                     =================================================== -->
+                <div id="tabCandidates" class="admin-tab-pane d-none">
+                    <div class="glass-card p-4">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+                            <div>
+                                <h5 class="fw-bold mb-1">Manajemen Kandidat (Guru / OSIS)</h5>
+                                <p class="text-secondary small mb-0">Kelola nama, jabatan, foto kandidat, atau unggah sekaligus via Excel.</p>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button class="btn btn-outline-emerald btn-sm" id="btnDownloadCandidateTemplate">
+                                    <i class="bi bi-download me-1"></i>Format Excel Kandidat
+                                </button>
+                                <label class="btn btn-outline-success btn-sm mb-0">
+                                    <i class="bi bi-upload me-1"></i>Import Excel Kandidat
+                                    <input type="file" id="inputExcelCandidates" accept=".xlsx,.xls" hidden>
+                                </label>
+                                <button class="btn btn-emerald btn-sm" id="btnOpenAddCandidate">
+                                    <i class="bi bi-plus-lg me-1"></i>Tambah Kandidat
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="row g-3" id="candidatesAdminGrid">
+                            <!-- Diisi dinamis oleh js/admin.js -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===================================================
+                     TAB 3: CRUD KATEGORI PEMILIHAN
+                     =================================================== -->
+                <div id="tabCategories" class="admin-tab-pane d-none">
+                    <div class="glass-card p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div>
+                                <h5 class="fw-bold mb-1">Kategori Pemilihan (Baris Matriks)</h5>
+                                <p class="text-secondary small mb-0">Setiap kategori akan tampil sebagai baris pada matriks surat suara pemilih.</p>
+                            </div>
+                            <button class="btn btn-emerald btn-sm" id="btnOpenAddCategory">
+                                <i class="bi bi-plus-lg me-1"></i>Tambah Kategori
+                            </button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="80">Urutan</th>
+                                        <th>Nama Kategori</th>
+                                        <th>Deskripsi Kriteria</th>
+                                        <th width="160" class="text-end">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="categoriesAdminTbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===================================================
+                     TAB 4: CRUD DATA PEMILIH & BULK IMPORT EXCEL
+                     =================================================== -->
+                <div id="tabVoters" class="admin-tab-pane d-none">
+                    <div class="glass-card p-4">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                            <div>
+                                <h5 class="fw-bold mb-1">Database Akun Pemilih (Siswa & Guru)</h5>
+                                <p class="text-secondary small mb-0">Unduh format Excel untuk mengunggah ratusan data pemilih per kelas secara instan.</p>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button class="btn btn-outline-emerald btn-sm" id="btnDownloadVoterTemplate">
+                                    <i class="bi bi-file-earmark-arrow-down me-1"></i>Unduh Template Excel
+                                </button>
+                                <label class="btn btn-outline-success btn-sm mb-0">
+                                    <i class="bi bi-file-earmark-spreadsheet me-1"></i>Upload Excel Pemilih
+                                    <input type="file" id="inputExcelVoters" accept=".xlsx,.xls" hidden>
+                                </label>
+                                <button class="btn btn-emerald btn-sm" id="btnOpenAddVoter">
+                                    <i class="bi bi-person-plus-fill me-1"></i>Tambah Pemilih
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Filter & Pencarian Pemilih -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-4">
+                                <select id="adminFilterKelas" class="form-select form-select-sm">
+                                    <option value="ALL">Semua Kelas / Unit</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <select id="adminFilterStatus" class="form-select form-select-sm">
+                                    <option value="ALL">Semua Status Suara</option>
+                                    <option value="VOTED">Sudah Memilih</option>
+                                    <option value="UNVOTED">Belum Memilih</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="search" id="adminSearchVoter" class="form-control form-control-sm" placeholder="Cari nama pemilih...">
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Kelas</th>
+                                        <th>Nama Pemilih</th>
+                                        <th>Password</th>
+                                        <th>Status</th>
+                                        <th>Waktu Memilih</th>
+                                        <th class="text-end">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="votersAdminTbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===================================================
+                     TAB 5: KUSTOMISASI UI (LOGO, BACKGROUND, STATUS SESI)
+                     =================================================== -->
+                <div id="tabSettings" class="admin-tab-pane d-none">
+                    <div class="row g-4">
+                        <div class="col-lg-7">
+                            <div class="glass-card p-4">
+                                <h5 class="fw-bold mb-1">Kustomisasi Identitas & Tampilan Web</h5>
+                                <p class="text-secondary small mb-4">Unggah file gambar langsung ke Supabase Storage atau tempel tautan gambar.</p>
+
+                                <form id="settingsForm">
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">NAMA SEKOLAH / INSTANSI</label>
+                                        <input type="text" id="setSchoolName" class="form-control" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">JUDUL KEGIATAN PEMILIHAN</label>
+                                        <input type="text" id="setElectionTitle" class="form-control" required>
+                                    </div>
+
+                                    <!-- Upload / URL Logo Sekolah -->
+                                    <div class="mb-3 p-3 bg-light rounded-4 border">
+                                        <label class="form-label small fw-bold d-block">LOGO SEKOLAH</label>
+                                        <div class="row g-2 align-items-center">
+                                            <div class="col-md-7">
+                                                <input type="url" id="setLogoUrl" class="form-control form-control-sm" placeholder="https://...">
+                                            </div>
+                                            <div class="col-md-5">
+                                                <label class="btn btn-outline-emerald btn-sm w-100 mb-0">
+                                                    <i class="bi bi-cloud-upload me-1"></i>Upload File Logo
+                                                    <input type="file" id="fileUploadLogo" accept="image/*" hidden>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Upload / URL Background Web -->
+                                    <div class="mb-3 p-3 bg-light rounded-4 border">
+                                        <label class="form-label small fw-bold d-block">LATAR BELAKANG (BACKGROUND) WEB</label>
+                                        <div class="row g-2 align-items-center">
+                                            <div class="col-md-7">
+                                                <input type="url" id="setBgUrl" class="form-control form-control-sm" placeholder="Kosongkan untuk tema gradien hijau default">
+                                            </div>
+                                            <div class="col-md-5">
+                                                <label class="btn btn-outline-emerald btn-sm w-100 mb-0">
+                                                    <i class="bi bi-image me-1"></i>Upload Background
+                                                    <input type="file" id="fileUploadBg" accept="image/*" hidden>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Status Sesi Voting -->
+                                    <div class="form-check form-switch mb-4">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="setVotingOpen" checked>
+                                        <label class="form-check-label fw-semibold" for="setVotingOpen">
+                                            Buka Sesi Pemilihan (Izinkan siswa/guru login dan mengirim suara)
+                                        </label>
+                                    </div>
+
+                                    <button type="submit" id="btnSaveSettings" class="btn btn-emerald px-4">
+                                        <i class="bi bi-save2-fill me-2"></i>Simpan Pengaturan Tampilan
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-5">
+                            <!-- Zona Reset Suara -->
+                            <div class="glass-card p-4 border-danger border-opacity-25">
+                                <h5 class="fw-bold text-danger mb-2">
+                                    <i class="bi bi-exclamation-octagon-fill me-2"></i>Zona Manajemen Sesi
+                                </h5>
+                                <p class="text-secondary small mb-3">
+                                    Gunakan tombol di bawah ini jika Anda ingin mengosongkan seluruh perolehan suara (`vote_counts`) dan mengembalikan status seluruh pemilih menjadi <strong>Belum Memilih</strong> untuk memulai periode pemilihan baru.
+                                </p>
+                                <button type="button" id="btnResetAllElectionVotes" class="btn btn-outline-danger w-100 rounded-3 fw-bold">
+                                    <i class="bi bi-trash3-fill me-1"></i>Reset Seluruh Perolehan Suara
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- =======================================================
+         MODAL CRUD KANDIDAT
+         ======================================================= -->
+    <div class="modal fade" id="candidateModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content border-0 rounded-4 shadow" id="candidateForm">
+                <div class="modal-header bg-success text-white border-0 rounded-top-4">
+                    <h5 class="modal-title fw-bold" id="candidateModalTitle">Tambah Kandidat</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" id="candId">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">NAMA LENGKAP & GELAR</label>
+                        <input type="text" id="candName" class="form-control" required placeholder="Contoh: Riyadi Ilham, S.Kom">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">JABATAN / KETERANGAN</label>
+                        <input type="text" id="candJabatan" class="form-control" required placeholder="Contoh: Guru Produktif TKJ">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">FOTO KANDIDAT (UPLOAD / URL)</label>
+                        <div class="input-group mb-2">
+                            <input type="url" id="candPhotoUrl" class="form-control" placeholder="https://...">
+                            <label class="btn btn-outline-success mb-0">
+                                <i class="bi bi-upload"></i> Upload
+                                <input type="file" id="candPhotoFile" accept="image/*" hidden>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold">NOMOR URUT KOLOM</label>
+                        <input type="number" id="candUrutan" class="form-control" value="1" min="1" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-emerald px-4">Simpan Kandidat</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =======================================================
+         MODAL CRUD KATEGORI
+         ======================================================= -->
+    <div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content border-0 rounded-4 shadow" id="categoryForm">
+                <div class="modal-header bg-success text-white border-0 rounded-top-4">
+                    <h5 class="modal-title fw-bold" id="categoryModalTitle">Tambah Kategori</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" id="catId">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">NAMA KATEGORI PEMILIHAN</label>
+                        <input type="text" id="catName" class="form-control" required placeholder="Contoh: Guru Terbaik">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">DESKRIPSI SINGKAT</label>
+                        <textarea id="catDesc" class="form-control" rows="2" placeholder="Penjelasan singkat kriteria kategori..."></textarea>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold">URUTAN BARIS</label>
+                        <input type="number" id="catUrutan" class="form-control" value="1" min="1" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-emerald px-4">Simpan Kategori</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =======================================================
+         MODAL CRUD PEMILIH
+         ======================================================= -->
+    <div class="modal fade" id="voterModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content border-0 rounded-4 shadow" id="voterForm">
+                <div class="modal-header bg-success text-white border-0 rounded-top-4">
+                    <h5 class="modal-title fw-bold" id="voterModalTitle">Tambah Akun Pemilih</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" id="voterId">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">KELAS / UNIT</label>
+                        <input type="text" id="voterKelas" class="form-control" required placeholder="Contoh: XII TKJ 1 atau DEWAN GURU">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">NAMA LENGKAP PEMILIH</label>
+                        <input type="text" id="voterNama" class="form-control" required placeholder="Contoh: Aditya Pratama">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold">PASSWORD / TOKEN LOGIN</label>
+                        <input type="text" id="voterPassword" class="form-control" required placeholder="Contoh: 12345">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-emerald px-4">Simpan Pemilih</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- GLOBAL TOAST & DIALOG MODAL (NO BROWSER ALERT/CONFIRM) -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" id="globalToastContainer" style="z-index: 1095;"></div>
+
+    <div class="modal fade" id="globalDialogModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="globalDialogTitle">Konfirmasi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-secondary" id="globalDialogBody"></div>
+                <div class="modal-footer border-0 pt-0" id="globalDialogFooter"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

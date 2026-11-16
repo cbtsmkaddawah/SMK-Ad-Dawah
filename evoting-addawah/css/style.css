@@ -1,0 +1,370 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --emerald-950: #022c22;
+    --emerald-900: #064e3b;
+    --emerald-800: #065f46;
+    --emerald-700: #047857;
+    --emerald-600: #059669;
+    --emerald-500: #10b981;
+    --emerald-400: #34d399;
+    --emerald-100: #d1fae5;
+    --emerald-50:  #ecfdf5;
+    --crimson-600: #e11d48;
+    --crimson-100: #ffe4e6;
+    --crimson-50:  #fff1f2;
+    --slate-900:   #0f172a;
+    --slate-700:   #334155;
+    --slate-500:   #64748b;
+    --slate-200:   #e2e8f0;
+    --slate-100:   #f1f5f9;
+    --custom-bg-image: none;
+}
+
+* {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    background-color: #f4fbf8;
+    background-image: 
+        var(--custom-bg-image),
+        radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.14) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(5, 150, 105, 0.12) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(209, 250, 229, 0.6) 0px, transparent 60%);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: var(--slate-900);
+    overflow-x: hidden;
+}
+
+/* Lapisan Overlay jika Admin mengunggah Background Custom */
+body.has-custom-bg::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(2, 44, 34, 0.78) 0%, rgba(5, 150, 105, 0.68) 100%);
+    backdrop-filter: blur(4px);
+    z-index: -1;
+}
+
+/* Glass Card & Surface */
+.glass-card {
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(16, 185, 129, 0.18);
+    border-radius: 1.25rem;
+    box-shadow: 0 20px 40px -15px rgba(6, 78, 59, 0.1);
+}
+
+.navbar-emerald {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(16, 185, 129, 0.16);
+}
+
+/* Brand & Logo */
+.school-logo-wrapper {
+    width: 58px;
+    height: 58px;
+    border-radius: 16px;
+    background: #ffffff;
+    padding: 6px;
+    box-shadow: 0 8px 20px rgba(5, 150, 105, 0.15);
+    border: 2px solid var(--emerald-100);
+    cursor: pointer;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    user-select: none;
+}
+
+.school-logo-wrapper:hover {
+    transform: scale(1.06) rotate(-2deg);
+}
+
+.school-logo-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Buttons & Inputs */
+.btn-emerald {
+    background: linear-gradient(135deg, var(--emerald-600) 0%, var(--emerald-700) 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 0.85rem;
+    font-weight: 700;
+    padding: 0.75rem 1.5rem;
+    box-shadow: 0 10px 20px -8px rgba(5, 150, 105, 0.45);
+    transition: all 0.25s ease;
+}
+
+.btn-emerald:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--emerald-500) 0%, var(--emerald-600) 100%);
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 14px 24px -8px rgba(5, 150, 105, 0.55);
+}
+
+.btn-emerald:disabled {
+    background: #94a3b8;
+    color: #f8fafc;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.btn-outline-emerald {
+    border: 1.5px solid var(--emerald-600);
+    color: var(--emerald-700);
+    background: transparent;
+    border-radius: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-emerald:hover {
+    background: var(--emerald-50);
+    color: var(--emerald-800);
+    border-color: var(--emerald-700);
+}
+
+.form-control, .form-select {
+    border-radius: 0.85rem;
+    border: 1.5px solid var(--slate-200);
+    padding: 0.72rem 1rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--emerald-500);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+}
+
+/* Cascading Dropdown Animation */
+.cascade-step {
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cascade-hidden {
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transform: translateY(-8px);
+    pointer-events: none;
+    margin: 0 !important;
+}
+
+.cascade-visible {
+    opacity: 1;
+    max-height: 220px;
+    transform: translateY(0);
+}
+
+/* ============================================================
+   WIZARD PEMILIHAN (STEP-BY-STEP CANDIDATE CARDS)
+   ============================================================ */
+.candidate-wizard-card {
+    background: #ffffff;
+    border: 1.5px solid var(--slate-200);
+    border-radius: 1rem;
+    padding: 1.15rem;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    text-align: left;
+    width: 100%;
+}
+
+.candidate-wizard-card:hover:not(:disabled) {
+    border-color: var(--emerald-500);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px -10px rgba(5, 150, 105, 0.18);
+}
+
+.candidate-wizard-avatar {
+    width: 58px;
+    height: 58px;
+    min-width: 58px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--emerald-100);
+    background: var(--emerald-50);
+}
+
+.candidate-wizard-info {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.candidate-wizard-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--slate-900);
+    margin-bottom: 0.15rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.candidate-wizard-role {
+    font-size: 0.78rem;
+    color: var(--slate-500);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* STATE 1: KANDIDAT DIPILIH PADA KATEGORI SAAT INI (HIJAU) */
+.candidate-wizard-card.state-selected {
+    background: linear-gradient(135deg, var(--emerald-600) 0%, var(--emerald-700) 100%);
+    border-color: var(--emerald-800);
+    color: #ffffff;
+    box-shadow: 0 12px 26px -8px rgba(5, 150, 105, 0.45);
+}
+
+.candidate-wizard-card.state-selected .candidate-wizard-name {
+    color: #ffffff;
+}
+
+.candidate-wizard-card.state-selected .candidate-wizard-role {
+    color: var(--emerald-100);
+}
+
+.candidate-wizard-card.state-selected .candidate-wizard-avatar {
+    border-color: #ffffff;
+}
+
+/* STATE 2: KANDIDAT SUDAH DIPILIH DI KATEGORI LAIN (LOCKED / LOW OPACITY) */
+.candidate-wizard-card.state-locked-used {
+    background: #f8fafc;
+    border: 1.5px dashed #cbd5e1;
+    opacity: 0.55;
+    cursor: not-allowed;
+    filter: grayscale(40%);
+}
+
+.candidate-wizard-used-badge {
+    display: inline-block;
+    margin-top: 0.35rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #64748b;
+    background: #e2e8f0;
+    padding: 0.15rem 0.55rem;
+    border-radius: 6px;
+}
+
+/* Card pada Halaman Ringkasan (Review) */
+.review-item-card {
+    background: #ffffff;
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    transition: border-color 0.2s ease;
+}
+
+.review-item-card:hover {
+    border-color: var(--emerald-400);
+}
+
+/* ============================================================
+   ADMIN DASHBOARD STYLING
+   ============================================================ */
+.admin-sidebar {
+    background: linear-gradient(180deg, var(--emerald-950) 0%, var(--emerald-900) 100%);
+    color: #ffffff;
+    min-height: 100vh;
+}
+
+.admin-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1.1rem;
+    color: rgba(255, 255, 255, 0.75);
+    border-radius: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    margin-bottom: 0.35rem;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+}
+
+.admin-nav-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.admin-nav-link.active {
+    background: var(--emerald-500);
+    color: #ffffff;
+    box-shadow: 0 8px 20px -4px rgba(16, 185, 129, 0.5);
+}
+
+.stat-card {
+    border-radius: 1.15rem;
+    border: 1px solid rgba(16, 185, 129, 0.15);
+    background: #ffffff;
+    padding: 1.35rem;
+    box-shadow: 0 8px 24px -10px rgba(6, 78, 59, 0.08);
+    transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+}
+
+/* Kartu Podium Pemenang */
+/* Kartu Podium Pemenang (Minimalis, Bersih & Profesional) */
+.podium-card {
+    border-radius: 12px;
+    background: #ffffff;
+    border: 1px solid #eef2f6;
+    padding: 1.25rem 1.35rem;
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.podium-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.08);
+}
+
+/* Scrollbar halus */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--emerald-600);
+}
