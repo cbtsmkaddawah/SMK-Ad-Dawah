@@ -10,8 +10,11 @@
     --emerald-400: #34d399;
     --emerald-100: #d1fae5;
     --emerald-50:  #ecfdf5;
+    --mint-soft:   #f0fdf7;
+    --gold-500:    #f59e0b;
+    --gold-400:    #fbbf24;
+    --gold-200:    #fde68a;
     --crimson-600: #e11d48;
-    --crimson-100: #ffe4e6;
     --crimson-50:  #fff1f2;
     --slate-900:   #0f172a;
     --slate-700:   #334155;
@@ -28,27 +31,33 @@
 
 body {
     min-height: 100vh;
-    background-color: #f4fbf8;
-    background-image: 
-        var(--custom-bg-image),
-        radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.14) 0px, transparent 50%),
-        radial-gradient(at 100% 0%, rgba(5, 150, 105, 0.12) 0px, transparent 50%),
-        radial-gradient(at 50% 100%, rgba(209, 250, 229, 0.6) 0px, transparent 60%);
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
+    background-color: var(--mint-soft);
+    background-image:
+        radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.16) 0px, transparent 45%),
+        radial-gradient(at 100% 15%, rgba(251, 191, 36, 0.14) 0px, transparent 40%),
+        radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.18) 0px, transparent 55%);
     color: var(--slate-900);
     overflow-x: hidden;
+    position: relative;
 }
 
-/* Lapisan Overlay jika Admin mengunggah Background Custom */
+
 body.has-custom-bg::before {
     content: "";
     position: fixed;
     inset: 0;
-    background: linear-gradient(135deg, rgba(2, 44, 34, 0.78) 0%, rgba(5, 150, 105, 0.68) 100%);
-    backdrop-filter: blur(4px);
-    z-index: -1;
+    background-image:
+        linear-gradient(
+            180deg,
+            rgba(244, 251, 248, 0.85) 0%,
+            rgba(255, 255, 255, 0.88) 50%,
+            rgba(236, 253, 245, 0.84) 100%
+        ),
+        var(--custom-bg-image);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    z-index: -2;
 }
 
 /* Glass Card & Surface */
@@ -145,24 +154,21 @@ body.has-custom-bg::before {
     box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
 }
 
-/* Cascading Dropdown Animation */
+/* Cascading Step Tetap di Tempat (Tidak Geser/Memanjang ke Bawah) */
 .cascade-step {
-    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.25s ease, border-color 0.25s ease, background-color 0.25s ease;
 }
 
 .cascade-hidden {
-    opacity: 0;
-    max-height: 0;
-    overflow: hidden;
-    transform: translateY(-8px);
+    opacity: 0.48;
     pointer-events: none;
-    margin: 0 !important;
+    background-color: #f8fafc !important;
+    border-color: #e2e8f0 !important;
 }
 
 .cascade-visible {
     opacity: 1;
-    max-height: 220px;
-    transform: translateY(0);
+    pointer-events: auto;
 }
 
 /* ============================================================
@@ -367,4 +373,253 @@ body.has-custom-bg::before {
 }
 ::-webkit-scrollbar-thumb:hover {
     background: var(--emerald-600);
+}
+
+/* ============================================================
+   ORNAMEN GELOMBANG BAWAH
+   ============================================================ */
+.wave-decor-bottom {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 95px;
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* ============================================================
+   LAYOUT LOGIN & SLOGAN (DESKTOP FIXED HEIGHT vs MOBILE VERTIKAL)
+   ============================================================ */
+.login-viewport-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Di Layar Desktop (>= 992px): Form Login pas 1 layar penuh & tidak geser ke bawah */
+@media (min-width: 992px) {
+    .login-viewport-wrapper {
+        min-height: calc(100vh - 140px);
+        max-height: calc(100vh - 120px);
+    }
+
+    #votingSection {
+        max-width: 1220px;
+        margin: 0 auto;
+    }
+}
+
+/* Di Layar HP (< 992px): Susunan Vertikal Nyaman */
+@media (max-width: 991.98px) {
+    .login-viewport-wrapper {
+        padding-bottom: 4rem;
+    }
+
+    .candidate-wizard-card {
+        padding: 0.9rem 1rem;
+    }
+}
+
+.login-shell-card {
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(16, 185, 129, 0.22);
+    border-radius: 1.35rem;
+    box-shadow: 0 20px 40px -15px rgba(6, 78, 59, 0.12);
+}
+
+.ballot-svg-wrap {
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+}
+
+.title-accent-green {
+    background: linear-gradient(135deg, var(--emerald-800) 0%, var(--emerald-500) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.login-step-card {
+    background: #ffffff;
+    border-radius: 0.95rem;
+    padding: 0.7rem 0.95rem;
+    border: 1.5px solid #d1fae5;
+    border-left: 4px solid var(--emerald-600);
+    transition: all 0.2s ease;
+}
+
+.login-step-card:focus-within {
+    border-color: var(--emerald-500);
+    border-left-color: var(--gold-500);
+    box-shadow: 0 6px 16px -6px rgba(5, 150, 105, 0.15);
+}
+
+.step-badge-circle {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--emerald-700);
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 0.72rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Panel Slogan di Sisi Kanan Login */
+.slogan-hero-panel {
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: 1.35rem;
+    box-shadow: 0 16px 36px -14px rgba(6, 78, 59, 0.08);
+}
+
+.slogan-gold-badge {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+    font-weight: 800;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+}
+
+.slogan-feature-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: #ffffff;
+    padding: 0.75rem 0.9rem;
+    border-radius: 0.9rem;
+    border: 1px solid #e2f2ea;
+}
+
+.slogan-feature-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--emerald-50);
+    color: var(--emerald-700);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   FOTO PROFIL KANDIDAT BISA DIKLIK (ZOOM PREVIEW)
+   ============================================================ */
+.candidate-avatar-trigger {
+    position: relative;
+    display: inline-block;
+    border-radius: 50%;
+    cursor: zoom-in;
+    flex-shrink: 0;
+}
+
+.candidate-avatar-trigger .zoom-hint-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--emerald-600);
+    color: #ffffff;
+    border: 2px solid #ffffff;
+    font-size: 0.62rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.candidate-avatar-trigger:hover .zoom-hint-badge {
+    transform: scale(1.15);
+    background: var(--gold-500);
+}
+
+/* ============================================================
+   KONSISTENSI TOMBOL NAVIGASI (UTAMA HIJAU, SEKUNDER PUTIH GARIS HIJAU)
+   ============================================================ */
+.wizard-nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 0;
+}
+
+/* Tombol Sekunder: Putih dengan Garis Hijau */
+.btn-nav-prev {
+    background: #ffffff;
+    color: var(--emerald-800);
+    border: 1.5px solid var(--emerald-600);
+    border-radius: 999px;
+    padding: 0.72rem 1.75rem;
+    font-weight: 700;
+    box-shadow: 0 6px 16px -6px rgba(6, 78, 59, 0.1);
+    transition: all 0.2s ease;
+}
+
+.btn-nav-prev:hover:not(:disabled) {
+    background: var(--emerald-50);
+    color: var(--emerald-900);
+    border-color: var(--emerald-700);
+    transform: translateX(-2px);
+}
+
+.btn-nav-prev:disabled {
+    background: rgba(255, 255, 255, 0.75);
+    border-color: #94a3b8;
+    color: #64748b;
+    cursor: not-allowed;
+}
+
+/* Tombol Utama: Hijau Emerald / Forest Green */
+.btn-nav-next {
+    background: linear-gradient(135deg, var(--emerald-600) 0%, var(--emerald-800) 100%);
+    color: #ffffff;
+    border: 1.5px solid var(--emerald-700);
+    border-radius: 999px;
+    padding: 0.72rem 2rem;
+    font-weight: 700;
+    box-shadow: 0 10px 22px -6px rgba(5, 150, 105, 0.45);
+    transition: all 0.2s ease;
+}
+
+.btn-nav-next:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--emerald-500) 0%, var(--emerald-700) 100%);
+    color: #ffffff;
+    transform: translateX(2px);
+    box-shadow: 0 14px 26px -6px rgba(5, 150, 105, 0.55);
+}
+
+.btn-nav-next:disabled {
+    background: #cbd5e1;
+    border-color: #cbd5e1;
+    color: #ffffff;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+/* Search Pill di Atas Grid Kandidat */
+.wizard-search-pill {
+    background: #ffffff;
+    border-radius: 999px;
+    padding: 0.35rem 1.15rem;
+    border: 1.5px solid #d1fae5;
+    box-shadow: 0 6px 20px -8px rgba(6, 78, 59, 0.08);
+}
+
+.wizard-search-pill .form-control {
+    border: none;
+    background: transparent;
+    padding: 0.45rem 0.5rem;
+    box-shadow: none !important;
 }

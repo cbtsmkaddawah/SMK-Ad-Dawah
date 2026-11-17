@@ -145,3 +145,27 @@ const AppUI = {
 document.addEventListener('DOMContentLoaded', () => {
     AppUI.loadAndApplySettings();
 });
+
+/**
+ * Buka Modal Perbesar Foto Kandidat saat foto profil diklik
+ */
+window.openCandidatePhotoPreview = function (event, name, jabatan, photoUrl) {
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+
+    const modalEl = document.getElementById('candidatePhotoModal');
+    if (!modalEl) return;
+
+    const imgEl = document.getElementById('previewCandidateImg');
+    const nameEl = document.getElementById('previewCandidateName');
+    const roleEl = document.getElementById('previewCandidateRole');
+
+    imgEl.src = photoUrl;
+    nameEl.textContent = name;
+    roleEl.textContent = jabatan;
+
+    const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    bsModal.show();
+};

@@ -13,6 +13,15 @@
 </head>
 <body>
 
+   <!-- ORNAMEN GELOMBANG BAWAH (FOREST GREEN, EMERALD & GOLD) -->
+    <div class="wave-decor-bottom">
+        <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="width:100%;height:100%;">
+            <path d="M720,95 C1020,65 1260,35 1440,55 L1440,120 L720,120 Z" fill="#eab308" fill-opacity="0.88"/>
+            <path d="M0,45 C360,115 920,65 1440,85 L1440,120 L0,120 Z" fill="#047857" fill-opacity="0.92"/>
+            <path d="M0,75 C420,95 980,75 1440,80 L1440,120 L0,120 Z" fill="#064e3b"/>
+        </svg>
+    </div>
+
     <!-- NAVBAR UTAMA -->
     <nav class="navbar navbar-emerald sticky-top py-3">
         <div class="container d-flex justify-content-between align-items-center">
@@ -46,71 +55,143 @@
     <main class="container py-4 py-lg-5">
 
         <!-- =======================================================
-             SECTION 1: HALAMAN LOGIN PEMILIH (CASCADING DROPDOWN)
+             SECTION 1: HALAMAN LOGIN (DESKTOP SPLIT LEBAR / MOBILE VERTIKAL)
              ======================================================= -->
-        <section id="loginSection" class="row justify-content-center align-items-center" style="min-height: 75vh;">
-            <div class="col-12 col-md-8 col-lg-5">
-                <div class="glass-card p-4 p-md-5">
-                    <div class="text-center mb-4">
-                        <div class="mx-auto mb-3 school-logo-wrapper" style="width: 78px; height: 78px;">
-                            <img src="https://i.ibb.co.com/Ngh0x6Rr/Addawah-300x.png" alt="Logo" class="dynamic-school-logo">
-                        </div>
-                        <h4 class="fw-bold text-dark mb-1 dynamic-election-title">Pemilihan Guru Teladan & OSIS</h4>
-                        <p class="text-secondary small mb-0">Silakan pilih kelas dan nama Anda untuk mulai memberikan suara.</p>
-                    </div>
+        <section id="loginSection" class="login-viewport-wrapper">
+            <div class="row g-4 g-lg-5 align-items-center justify-content-center w-100 mx-auto" style="max-width: 1140px;">
+                
+                <!-- KOLOM KIRI/TENGAH: FORM LOGIN (TETAP & TIDAK BERGESER KE BAWAH) -->
+                <div class="col-12 col-md-9 col-lg-6">
+                    <div class="login-shell-card p-3 p-md-4">
 
-                    <form id="voterLoginForm" novalidate>
-                        <!-- LANGKAH 1: PILIH KELAS -->
-                        <div class="mb-3">
-                            <label for="selectKelas" class="form-label fw-bold small text-uppercase text-secondary">
-                                <span class="badge bg-success me-1">1</span> Pilih Kelas / Unit
-                            </label>
-                            <select id="selectKelas" class="form-select" required>
-                                <option value="">-- Memuat daftar kelas... --</option>
-                            </select>
-                        </div>
-
-                        <!-- LANGKAH 2: PILIH NAMA (MUNCUL SETELAH KELAS DIPILIH) -->
-                        <div id="stepNamaWrapper" class="mb-3 cascade-step cascade-hidden">
-                            <label for="selectNama" class="form-label fw-bold small text-uppercase text-secondary">
-                                <span class="badge bg-success me-1">2</span> Pilih Nama Lengkap
-                            </label>
-                            <select id="selectNama" class="form-select" required disabled>
-                                <option value="">-- Pilih nama Anda --</option>
-                            </select>
-                        </div>
-
-                        <!-- LANGKAH 3: PASSWORD (MUNCUL SETELAH NAMA DIPILIH) -->
-                        <div id="stepPasswordWrapper" class="mb-4 cascade-step cascade-hidden">
-                            <label for="inputVoterPassword" class="form-label fw-bold small text-uppercase text-secondary">
-                                <span class="badge bg-success me-1">3</span> Kata Sandi / Token Pemilih
-                            </label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light border-end-0 rounded-start-3">
-                                    <i class="bi bi-key-fill text-success"></i>
-                                </span>
-                                <input type="password" id="inputVoterPassword" class="form-control border-start-0" placeholder="Masukkan password Anda..." required>
-                                <button class="btn btn-outline-secondary rounded-end-3" type="button" id="toggleVoterPass">
-                                    <i class="bi bi-eye"></i>
-                                </button>
+                        <!-- Header Kotak Suara & Judul -->
+                        <div class="d-flex align-items-center gap-3 mb-3 pb-2 border-bottom">
+                            <div class="ballot-svg-wrap">
+                                <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="58" cy="64" r="44" fill="#d1fae5"/>
+                                    <path d="M62 42 C72 24, 88 22, 104 6 C92 26, 78 30, 68 46 Z" fill="#eab308"/>
+                                    <polygon points="22,58 60,44 98,58 60,72" fill="#10b981"/>
+                                    <polygon points="22,58 60,72 60,106 22,92" fill="#047857"/>
+                                    <polygon points="98,58 60,72 60,106 98,92" fill="#064e3b"/>
+                                    <polygon points="22,63 60,77 98,63 98,68 60,82 22,68" fill="#ffffff" fill-opacity="0.9"/>
+                                    <polygon points="44,57 60,51 76,57 60,63" fill="#022c22"/>
+                                    <g transform="rotate(-12 60 42)">
+                                        <rect x="45" y="24" width="30" height="34" rx="4" fill="#ffffff" stroke="#a7f3d0" stroke-width="2"/>
+                                        <path d="M53 40 L58 45 L68 34" stroke="#059669" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </g>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="fw-extrabold mb-1 text-dark dynamic-election-title">
+                                    <span class="title-accent-green">E-Voting</span> Guru & OSIS
+                                </h4>
+                                <p class="text-secondary small mb-0">
+                                    Pilih kelas, nama lengkap, dan masukkan token suara Anda.
+                                </p>
                             </div>
                         </div>
 
-                        <!-- TOMBOL MASUK -->
-                        <div id="loginActionWrapper" class="d-grid">
-                            <button type="submit" id="btnVoterLogin" class="btn btn-emerald py-3" disabled>
-                                <i class="bi bi-box-arrow-in-right me-2"></i>Masuk ke Bilik Pemilihan
-                            </button>
-                        </div>
-                    </form>
+                        <form id="voterLoginForm" novalidate>
+                            <!-- KARTU 1: PILIH KELAS -->
+                            <div class="login-step-card mb-2">
+                                <label for="selectKelas" class="form-label fw-bold small text-uppercase text-dark d-flex align-items-center gap-2 mb-1">
+                                    <span class="step-badge-circle">1</span>
+                                    <i class="bi bi-mortarboard-fill text-success"></i>
+                                    <span>Pilih Kelas / Unit</span>
+                                </label>
+                                <select id="selectKelas" class="form-select form-select-sm border-0 bg-light fw-semibold" required>
+                                    <option value="">-- Memuat daftar kelas... --</option>
+                                </select>
+                            </div>
 
-                    <div class="mt-4 pt-3 border-top text-center">
-                        <small class="text-muted d-block">
-                            <i class="bi bi-incognito text-success me-1"></i>
-                            Pilihan Anda bersifat <strong>100% Rahasia (Anonim)</strong>. Sistem tidak menautkan nama Anda dengan kandidat yang dipilih.
-                        </small>
+                            <!-- KARTU 2: PILIH NAMA -->
+                            <div id="stepNamaWrapper" class="login-step-card mb-2 cascade-step cascade-hidden">
+                                <label for="selectNama" class="form-label fw-bold small text-uppercase text-dark d-flex align-items-center gap-2 mb-1">
+                                    <span class="step-badge-circle">2</span>
+                                    <i class="bi bi-person-fill text-success"></i>
+                                    <span>Pilih Nama Lengkap</span>
+                                </label>
+                                <select id="selectNama" class="form-select form-select-sm border-0 bg-light fw-semibold" required disabled>
+                                    <option value="">-- Pilih nama Anda --</option>
+                                </select>
+                            </div>
+
+                            <!-- KARTU 3: KATA SANDI -->
+                            <div id="stepPasswordWrapper" class="login-step-card mb-3 cascade-step cascade-hidden">
+                                <label for="inputVoterPassword" class="form-label fw-bold small text-uppercase text-dark d-flex align-items-center gap-2 mb-1">
+                                    <span class="step-badge-circle">3</span>
+                                    <i class="bi bi-lock-fill text-success"></i>
+                                    <span>Kata Sandi / Token Pemilih</span>
+                                </label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light border-end-0 rounded-start-3">
+                                        <i class="bi bi-key-fill text-success"></i>
+                                    </span>
+                                    <input type="password" id="inputVoterPassword" class="form-control bg-light border-start-0" placeholder="Masukkan password Anda..." required>
+                                    <button class="btn btn-outline-emerald btn-sm rounded-end-3 px-3" type="button" id="toggleVoterPass">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- TOMBOL MASUK UTAMA (HIJAU) -->
+                            <div id="loginActionWrapper" class="d-grid">
+                                <button type="submit" id="btnVoterLogin" class="btn btn-emerald py-2 fs-6 rounded-pill" disabled>
+                                    <i class="bi bi-box-arrow-in-right me-2"></i>Masuk ke Bilik Pemilihan
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="mt-3 pt-2 border-top text-center">
+                            <small class="text-secondary d-block" style="font-size: 0.76rem;">
+                                <i class="bi bi-shield-check text-success fw-bold me-1"></i>
+                                Pilihan bersifat <strong>100% Rahasia (Anonim)</strong>. Identitas tidak ditautkan dengan kandidat.
+                            </small>
+                        </div>
                     </div>
                 </div>
+
+                <!-- KOLOM KANAN: PANEL SLOGAN & IDENTITAS SEKOLAH (KHUSUS DESKTOP LEBAR) -->
+                <div class="col-12 col-md-9 col-lg-6">
+                    <div class="slogan-hero-panel p-4 p-xl-5">
+                        <span class="badge slogan-gold-badge rounded-pill px-3 py-2 mb-3">
+                            <i class="bi bi-stars me-1"></i>DEMOKRASI DIGITAL SEKOLAH
+                        </span>
+                        <h2 class="fw-extrabold text-dark mb-3 lh-sm">
+                            Satu Suara Anda, <br>
+                            <span class="title-accent-green">Inspirasi Terbaik</span> untuk SMK AD-DA'WAH.
+                        </h2>
+                        <p class="text-secondary mb-4" style="font-size: 0.95rem; line-height: 1.6;">
+                            Gunakan hak pilih Anda secara objektif, jujur, dan bertanggung jawab untuk mengapresiasi dedikasi pendidik serta pengurus OSIS terbaik di lingkungan sekolah kita.
+                        </p>
+
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="slogan-feature-item">
+                                    <div class="slogan-feature-icon">
+                                        <i class="bi bi-incognito"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark small">100% Anonim</div>
+                                        <div class="text-secondary" style="font-size: 0.75rem;">Pilihan terenkripsi tanpa jejak nama</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="slogan-feature-item">
+                                    <div class="slogan-feature-icon">
+                                        <i class="bi bi-lightning-charge-fill"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark small">Cepat & Transparan</div>
+                                        <div class="text-secondary" style="font-size: 0.75rem;">Rekapitulasi suara langsung (Live)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </section>
 
@@ -141,25 +222,19 @@
                 </div>
             </div>
 
-            <!-- STEP VIEW A: GRID KANDIDAT + SEARCH BAR -->
+            <!-- STEP VIEW A: GRID KANDIDAT + SEARCH PILL & TOMBOL NAVIGASI MENONJOL -->
             <div id="wizardCandidateStepView">
-                <!-- Baris Pencarian Cepat & Indikator Pilihan Saat Ini -->
-                <div class="glass-card p-3 mb-4">
-                    <div class="row g-3 align-items-center justify-content-between">
-                        <div class="col-12 col-md-5 col-lg-4">
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-white border-end-0 text-secondary">
-                                    <i class="bi bi-search"></i>
-                                </span>
-                                <input type="search" id="wizardSearchInput" class="form-control border-start-0 ps-0" placeholder="Ketik nama atau jabatan guru...">
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-7 col-lg-8 text-md-end">
-                            <span class="small text-secondary" id="currentStepSelectionInfo">
-                                Belum ada kandidat dipilih pada kategori ini.
-                            </span>
-                        </div>
-                    </div>
+                <!-- Search Pill di Atas Grid -->
+                <div class="wizard-search-pill mb-2 d-flex align-items-center">
+                    <i class="bi bi-search text-secondary ms-2 me-2"></i>
+                    <input type="search" id="wizardSearchInput" class="form-control" placeholder="Ketik nama atau jabatan guru...">
+                </div>
+
+                <!-- Petunjuk Pilihan di Bawah Search Bar -->
+                <div class="text-center my-3">
+                    <span class="small fw-semibold text-dark" id="currentStepSelectionInfo">
+                        <i class="bi bi-hand-index-thumb me-1 text-success"></i>Klik kartu kandidat untuk memilih, atau klik foto guru untuk memperbesar gambar.
+                    </span>
                 </div>
 
                 <!-- Grid 26 Card Kandidat Responsif -->
@@ -167,12 +242,12 @@
                     <!-- Diisi dinamis oleh js/vote.js -->
                 </div>
 
-                <!-- Navigasi Footer Step (Sebelumnya / Selanjutnya) -->
-                <div class="glass-card p-3 px-4 d-flex justify-content-between align-items-center">
-                    <button type="button" id="btnWizardPrev" class="btn btn-light border rounded-3 px-4 fw-semibold" disabled>
+                <!-- Navigasi Menonjol (Sebelumnya & Selanjutnya) -->
+                <div class="wizard-nav-container mb-5">
+                    <button type="button" id="btnWizardPrev" class="btn btn-nav-prev" disabled>
                         <i class="bi bi-arrow-left me-2"></i>Sebelumnya
                     </button>
-                    <button type="button" id="btnWizardNext" class="btn btn-emerald px-4 py-2" disabled>
+                    <button type="button" id="btnWizardNext" class="btn btn-nav-next" disabled>
                         Selanjutnya<i class="bi bi-arrow-right ms-2"></i>
                     </button>
                 </div>
@@ -292,6 +367,25 @@
                 <div class="modal-body text-secondary" id="globalDialogBody"></div>
                 <div class="modal-footer border-0 pt-0" id="globalDialogFooter">
                     <button type="button" class="btn btn-emerald px-4" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =======================================================
+         MODAL PREVIEW / PERBESAR FOTO PROFIL KANDIDAT
+         ======================================================= -->
+    <div class="modal fade" id="candidatePhotoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+                <div class="modal-header bg-success text-white border-0 py-2 px-3">
+                    <small class="fw-bold"><i class="bi bi-person-bounding-box me-1"></i>Foto Profil Kandidat</small>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 text-center bg-white">
+                    <img id="previewCandidateImg" src="" alt="Foto Kandidat" class="img-fluid rounded-4 shadow-sm border mb-3" style="max-height: 260px; width: 100%; object-fit: cover;">
+                    <h6 class="fw-extrabold text-dark mb-1" id="previewCandidateName">-</h6>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1" id="previewCandidateRole">-</span>
                 </div>
             </div>
         </div>

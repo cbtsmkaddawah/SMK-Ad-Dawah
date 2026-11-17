@@ -107,15 +107,15 @@
 
             <!-- KONTEN UTAMA DASHBOARD -->
             <main class="col-lg-10 p-4 p-lg-5">
-                <!-- Header Bar -->
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                <!-- Header Bar Admin dengan Latar Glass Bersih agar Kontras -->
+                <div class="glass-card p-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
                     <div>
-                        <h4 class="fw-bold mb-0 text-dark dynamic-election-title">Dashboard Rekapitulasi & Manajemen</h4>
-                        <p class="text-secondary small mb-0">Pantau grafik suara secara *real-time*, kelola data Excel, dan atur tampilan web.</p>
+                        <h4 class="fw-extrabold mb-0 text-dark dynamic-election-title">Dashboard Rekapitulasi & Manajemen</h4>
+                        <p class="text-secondary small mb-0">Pantau grafik suara secara real-time, kelola data Excel, dan atur tampilan web.</p>
                     </div>
                     <div class="d-flex align-items-center gap-2">
-                        <button id="btnRefreshDashboard" class="btn btn-outline-emerald btn-sm px-3 py-2">
-                            <i class="bi bi-arrow-clockwise me-1"></i>Segarkan Data
+                        <button id="btnRefreshDashboard" class="btn btn-light border fw-semibold btn-sm px-3 py-2 rounded-3 shadow-sm">
+                            <i class="bi bi-arrow-clockwise text-success me-1"></i>Segarkan Data
                         </button>
                         <button id="btnExportFullReport" class="btn btn-emerald btn-sm px-3 py-2">
                             <i class="bi bi-file-earmark-excel-fill me-1"></i>Export Hasil ke Excel
@@ -549,6 +549,25 @@
                 </div>
                 <div class="modal-body text-secondary" id="globalDialogBody"></div>
                 <div class="modal-footer border-0 pt-0" id="globalDialogFooter"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =======================================================
+         MODAL PREVIEW / PERBESAR FOTO PROFIL KANDIDAT
+         ======================================================= -->
+    <div class="modal fade" id="candidatePhotoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+                <div class="modal-header bg-success text-white border-0 py-2 px-3">
+                    <small class="fw-bold"><i class="bi bi-person-bounding-box me-1"></i>Foto Profil Kandidat</small>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 text-center bg-white">
+                    <img id="previewCandidateImg" src="" alt="Foto Kandidat" class="img-fluid rounded-4 shadow-sm border mb-3" style="max-height: 260px; width: 100%; object-fit: cover;">
+                    <h6 class="fw-extrabold text-dark mb-1" id="previewCandidateName">-</h6>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1" id="previewCandidateRole">-</span>
+                </div>
             </div>
         </div>
     </div>

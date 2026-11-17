@@ -273,12 +273,15 @@ function renderCandidateCardsGrid() {
 
     grid.innerHTML = filteredCandidates.map(cand => {
         const isSelectedHere = String(selectedCandIdInThisStep) === String(cand.id);
-        // Kunci kandidat LAIN hanya pada kategori yang sedang tampil saat ini
         const isLockedOtherInSameCategory = hasSelectionInThisStep && !isSelectedHere;
 
         const avatar = cand.photo_url && cand.photo_url.trim() !== ''
             ? cand.photo_url
-            : `https://ui-avatars.com/api/?name=${encodeURIComponent(cand.name)}&background=059669&color=fff&size=160`;
+            : `https://ui-avatars.com/api/?name=${encodeURIComponent(cand.name)}&background=059669&color=fff&size=240`;
+
+        const safeName = AppUI.escapeHtml(cand.name);
+        const safeRole = AppUI.escapeHtml(cand.jabatan);
+        const safeAvatar = AppUI.escapeHtml(avatar);
 
         let cardStateClass = '';
         let statusIconHtml = '<i class="bi bi-circle text-secondary fs-5"></i>';
@@ -287,36 +290,45 @@ function renderCandidateCardsGrid() {
         if (isSelectedHere) {
             cardStateClass = 'state-selected';
             statusIconHtml = '<i class="bi bi-check-circle-fill text-white fs-4"></i>';
-            helperBadgeHtml = `<span class="d-inline-block mt-1 text-white opacity-75" style="font-size: 0.7rem;"><i class="bi bi-arrow-counterclockwise me-1"></i>Klik lagi untuk ganti pilihan</span>`;
+            helperBadgeHtml = `<span class="d-inline-block mt-1 text-white opacity-75" style="font-size: 0.7rem;"><i class="bi bi-arrow-counterclockwise me-1"></i>Klik lagi untuk ganti</span>`;
         } else if (isLockedOtherInSameCategory) {
             cardStateClass = 'state-locked-used';
             statusIconHtml = '<i class="bi bi-dash-circle text-secondary fs-5"></i>';
         }
 
         return `
-            <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-                <button type="button"
+            <div class="col-12 col-md-6 col-lg-3">
+                <div role="button"
+                    tabindex="0"
                     class="candidate-wizard-card ${cardStateClass}"
                     data-cand-id="${cand.id}"
-                    ${isLockedOtherInSameCategory ? 'disabled' : ''}>
-                    <img src="${AppUI.escapeHtml(avatar)}" alt="${AppUI.escapeHtml(cand.name)}" class="candidate-wizard-avatar">
+                    data-locked="${isLockedOtherInSameCategory ? '1' : '0'}">
+                    
+                    <!-- Klik Foto untuk Memperbesar Gambar -->
+                    <div class="candidate-avatar-trigger"
+                        title="Klik untuk memperbesar foto ${safeName}"
+                        onclick="openCandidatePhotoPreview(event, '${safeName.replace(/'/g, "\\'")}', '${safeRole.replace(/'/g, "\\'")}', '${safeAvatar.replace(/'/g, "\\'")}')">
+                        <img src="${safeAvatar}" alt="${safeName}" class="candidate-wizard-avatar">
+                        <span class="zoom-hint-badge"><i class="bi bi-zoom-in"></i></span>
+                    </div>
+
                     <div class="candidate-wizard-info">
-                        <div class="candidate-wizard-name" title="${AppUI.escapeHtml(cand.name)}">${AppUI.escapeHtml(cand.name)}</div>
-                        <div class="candidate-wizard-role" title="${AppUI.escapeHtml(cand.jabatan)}">${AppUI.escapeHtml(cand.jabatan)}</div>
+                        <div class="candidate-wizard-name" title="${safeName}">${safeName}</div>
+                        <div class="candidate-wizard-role" title="${safeRole}">${safeRole}</div>
                         ${helperBadgeHtml}
                     </div>
                     <div class="ms-auto ps-1">
                         ${statusIconHtml}
                     </div>
-                </button>
+                </div>
             </div>
         `;
     }).join('');
 
-    // Event klik pada Card Kandidat yang aktif
-    grid.querySelectorAll('.candidate-wizard-card:not(:disabled)').forEach(cardBtn => {
-        cardBtn.addEventListener('click', () => {
-            const candId = cardBtn.getAttribute('data-cand-id');
+    // Event klik pada Card Kandidat (hanya jika tidak terkunci)
+    grid.querySelectorAll('.candidate-wizard-card[data-locked="0"]').forEach(cardEl => {
+        cardEl.addEventListener('click', () => {
+            const candId = cardEl.getAttribute('data-cand-id');
             selectCandidateForCurrentStep(activeCat.id, candId);
         });
     });
