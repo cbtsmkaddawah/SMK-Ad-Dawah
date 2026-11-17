@@ -8,6 +8,8 @@ let adminCategories = [];
 let adminCandidates = [];
 let adminVoters = [];
 let adminVoteCounts = [];
+let adminVoteLogs = [];
+let currentAdminUser = null;
 let electionChartInstance = null;
 let currentChartType = 'bar';
 
@@ -29,7 +31,12 @@ document.addEventListener('DOMContentLoaded', () => {
 function initAdminAuth() {
     const savedSession = sessionStorage.getItem(ADMIN_SESSION_KEY);
     if (savedSession) {
-        showAdminDashboard();
+        try {
+            currentAdminUser = JSON.parse(savedSession);
+            showAdminDashboard();
+        } catch (e) {
+            sessionStorage.removeItem(ADMIN_SESSION_KEY);
+        }
     }
 
     const loginForm = document.getElementById('adminLoginForm');
@@ -46,7 +53,7 @@ function initAdminAuth() {
             try {
                 const { data, error } = await db
                     .from('admins')
-                    .select('id, username, full_name')
+                    .select('id, username, full_name, role')
                     .eq('username', username)
                     .eq('password', password)
                     .maybeSingle();
@@ -56,8 +63,9 @@ function initAdminAuth() {
                     return;
                 }
 
+                currentAdminUser = data;
                 sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(data));
-                AppUI.toast(`Selamat datang, ${data.full_name}!`, 'success');
+                AppUI.toast(`Selamat datang, ${data.full_name} (${data.role.toUpperCase()})!`, 'success');
                 showAdminDashboard();
             } catch (err) {
                 console.error(err);
@@ -72,6 +80,7 @@ function initAdminAuth() {
     document.getElementById('btnAdminLogout')?.addEventListener('click', () => {
         AppUI.confirm('Logout dari Panel Admin?', 'Sesi administrator Anda akan diakhiri.', () => {
             sessionStorage.removeItem(ADMIN_SESSION_KEY);
+            currentAdminUser = null;
             document.getElementById('adminDashboardView').classList.add('d-none');
             document.getElementById('adminLoginView').classList.remove('d-none');
             AppUI.toast('Anda telah keluar dari panel admin.', 'info');
@@ -110,23 +119,33 @@ function initAdminTabs() {
    ============================================================ */
 async function refreshAllAdminData() {
     try {
-        const [catRes, candRes, voterRes, voteRes, setRes] = await Promise.all([
+        const isSuperAdmin = currentAdminUser && currentAdminUser.role === 'superadmin';
+
+        const queries = [
             db.from('categories').select('*').order('urutan', { ascending: true }),
             db.from('candidates').select('*').order('urutan', { ascending: true }),
             db.from('voters').select('*').order('kelas', { ascending: true }).order('nama', { ascending: true }),
             db.from('vote_counts').select('*'),
             db.from('settings').select('*').eq('id', 1).single()
-        ]);
+        ];
+
+        if (isSuperAdmin) {
+            queries.push(db.from('vote_logs').select('*').order('created_at', { ascending: true }));
+        }
+
+        const [catRes, candRes, voterRes, voteRes, setRes, logsRes] = await Promise.all(queries);
 
         adminCategories = catRes.data || [];
         adminCandidates = candRes.data || [];
         adminVoters = voterRes.data || [];
         adminVoteCounts = voteRes.data || [];
+        adminVoteLogs = isSuperAdmin && logsRes ? (logsRes.data || []) : [];
 
         updateSummaryStatCards();
         populateCategoryChartFilter();
         renderPodiumWinners();
         renderInteractiveChart();
+        renderSuperAdminCandidateAudit();
         renderCandidatesGrid();
         renderCategoriesTable();
         populateVoterClassFilter();
@@ -357,6 +376,150 @@ function renderInteractiveChart() {
         }
     });
 }
+
+/**
+ * Render daftar kandidat yang bisa diklik oleh Super Admin di menu Hasil & Grafik Live
+ */
+function renderSuperAdminCandidateAudit() {
+    const section = document.getElementById('superAdminAuditSection');
+    const grid = document.getElementById('superAdminCandidatesAuditGrid');
+    if (!section || !grid) return;
+
+    const isSuperAdmin = currentAdminUser && currentAdminUser.role === 'superadmin';
+    if (!isSuperAdmin) {
+        section.classList.add('d-none');
+        return;
+    }
+
+    section.classList.remove('d-none');
+
+    if (adminCandidates.length === 0) {
+        grid.innerHTML = '<div class="col-12 text-muted small">Belum ada data kandidat.</div>';
+        return;
+    }
+
+    grid.innerHTML = adminCandidates.map(cand => {
+        const totalCandVotes = adminVoteLogs.filter(log => String(log.candidate_id) === String(cand.id)).length;
+        const avatar = cand.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(cand.name)}&background=059669&color=fff`;
+
+        return `
+            <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                <div role="button"
+                    class="podium-card h-100 d-flex align-items-center justify-content-between gap-3"
+                    style="cursor: pointer; border: 1.5px solid #e2e8f0;"
+                    onclick="openSuperAdminCandidateDetail('${cand.id}')">
+                    <div class="d-flex align-items-center gap-3 min-w-0">
+                        <img src="${AppUI.escapeHtml(avatar)}" alt="Foto" class="rounded-circle border" style="width: 48px; height: 48px; object-fit: cover; flex-shrink: 0;">
+                        <div class="min-w-0">
+                            <div class="fw-bold text-dark text-truncate" style="font-size: 0.92rem;">${AppUI.escapeHtml(cand.name)}</div>
+                            <div class="small text-muted text-truncate">${AppUI.escapeHtml(cand.jabatan)}</div>
+                            <span class="badge bg-success-subtle text-success mt-1">${totalCandVotes} Pilihan Masuk</span>
+                        </div>
+                    </div>
+                    <i class="bi bi-chevron-right text-secondary"></i>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+/**
+ * Buka Modal Detail Kandidat:
+ * - Kolom ke kanan = Kategori Pemilihan (misal: Guru Terbaik, Guru Terajin, dst.)
+ * - Baris ke bawah di tiap kolom = Daftar Nama Siswa + Kelas yang memilih kandidat ini
+ */
+window.openSuperAdminCandidateDetail = function (candidateId) {
+    const cand = adminCandidates.find(c => String(c.id) === String(candidateId));
+    if (!cand) return;
+
+    const avatar = cand.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(cand.name)}&background=059669&color=fff`;
+    document.getElementById('saModalCandAvatar').src = avatar;
+    document.getElementById('saModalCandName').textContent = cand.name;
+    document.getElementById('saModalCandRole').textContent = cand.jabatan;
+
+    const thead = document.getElementById('saModalThead');
+    const tbody = document.getElementById('saModalTbody');
+
+    // Kelompokkan pemilih berdasarkan kategori untuk kandidat yang diklik
+    const votersByCategory = {};
+    let maxRows = 0;
+    let grandTotalVotes = 0;
+
+    adminCategories.forEach(cat => {
+        const matchingLogs = adminVoteLogs.filter(
+            log => String(log.candidate_id) === String(cand.id) && String(log.category_id) === String(cat.id)
+        );
+
+        const voterList = matchingLogs.map(log => {
+            const voterObj = adminVoters.find(v => String(v.id) === String(log.voter_id));
+            return voterObj
+                ? { nama: voterObj.nama, kelas: voterObj.kelas }
+                : { nama: 'Pemilih Terhapus', kelas: '-' };
+        });
+
+        votersByCategory[cat.id] = voterList;
+        grandTotalVotes += voterList.length;
+        if (voterList.length > maxRows) {
+            maxRows = voterList.length;
+        }
+    });
+
+    // 1. Render Header Kolom Kategori (Ke Kanan)
+    let headHtml = '<tr>';
+    adminCategories.forEach(cat => {
+        const count = (votersByCategory[cat.id] || []).length;
+        headHtml += `
+            <th class="p-3 text-center" style="min-width: 210px;">
+                <div class="fw-extrabold text-dark">${AppUI.escapeHtml(cat.name)}</div>
+                <span class="badge bg-success rounded-pill mt-1">${count} Pemilih</span>
+            </th>
+        `;
+    });
+    headHtml += '</tr>';
+    thead.innerHTML = headHtml;
+
+    // 2. Render Baris Nama Siswa (Ke Bawah di Setiap Kolom Kategori)
+    if (maxRows === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="${Math.max(1, adminCategories.length)}" class="text-center py-5 text-muted">
+                    Belum ada siswa/pemilih yang memilih <strong>${AppUI.escapeHtml(cand.name)}</strong> pada kategori mana pun.
+                </td>
+            </tr>
+        `;
+    } else {
+        let bodyHtml = '';
+        for (let rowIndex = 0; rowIndex < maxRows; rowIndex++) {
+            bodyHtml += '<tr>';
+            adminCategories.forEach(cat => {
+                const voterItem = votersByCategory[cat.id][rowIndex];
+                if (voterItem) {
+                    bodyHtml += `
+                        <td class="p-2 px-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-light text-secondary border">${rowIndex + 1}</span>
+                                <div>
+                                    <div class="fw-semibold text-dark small">${AppUI.escapeHtml(voterItem.nama)}</div>
+                                    <div class="text-success fw-bold" style="font-size: 0.7rem;">${AppUI.escapeHtml(voterItem.kelas)}</div>
+                                </div>
+                            </div>
+                        </td>
+                    `;
+                } else {
+                    bodyHtml += '<td class="bg-light bg-opacity-50"></td>';
+                }
+            });
+            bodyHtml += '</tr>';
+        }
+        tbody.innerHTML = bodyHtml;
+    }
+
+    document.getElementById('saModalTotalSummary').innerHTML =
+        `Total akumulasi suara untuk <strong>${AppUI.escapeHtml(cand.name)}</strong> di seluruh kategori: <strong>${grandTotalVotes} suara</strong>`;
+
+    const modalEl = document.getElementById('superAdminDetailModal');
+    bootstrap.Modal.getOrCreateInstance(modalEl).show();
+};
 
 /* ============================================================
    4. CRUD KANDIDAT + UPLOAD FOTO + IMPORT EXCEL KANDIDAT
@@ -906,6 +1069,7 @@ function initWebCustomizationSettings() {
             'Tindakan ini akan mengosongkan seluruh grafik suara (<strong>0 suara</strong>) dan mengembalikan status seluruh pemilih menjadi <strong>Belum Memilih</strong>.',
             async () => {
                 try {
+                    await db.from('vote_logs').delete().neq('voter_id', '00000000-0000-0000-0000-000000000000');
                     await db.from('vote_counts').delete().neq('total_votes', -1);
                     await db.from('voters').update({ has_voted: false, voted_at: null }).neq('nama', '');
                     AppUI.toast('Seluruh perolehan suara dan status pemilih telah direset!', 'success');

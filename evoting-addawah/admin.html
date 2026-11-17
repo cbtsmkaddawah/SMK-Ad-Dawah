@@ -216,6 +216,25 @@
                             <canvas id="electionResultChart"></canvas>
                         </div>
                     </div>
+
+                    <!-- KHUSUS SUPER ADMIN: AUDIT RINCIAN PEMILIH PER KANDIDAT -->
+                    <div id="superAdminAuditSection" class="glass-card p-4 p-lg-5 mt-4 d-none">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4 pb-3 border-bottom">
+                            <div>
+                                <span class="badge bg-warning text-dark fw-extrabold rounded-pill px-3 py-1 mb-2">
+                                    <i class="bi bi-shield-lock-fill me-1"></i>FITUR KHUSUS SUPER ADMIN
+                                </span>
+                                <h5 class="fw-bold text-dark mb-1">Cek Detail Pemilih per Kandidat</h5>
+                                <p class="text-muted small mb-0">
+                                    Klik salah satu kartu kandidat di bawah ini untuk melihat rincian nama siswa/guru yang memilih kandidat tersebut di setiap kategori.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="row g-3" id="superAdminCandidatesAuditGrid">
+                            <!-- Diisi dinamis oleh js/admin.js -->
+                        </div>
+                    </div>
                 </div>
 
                 <!-- ===================================================
@@ -567,6 +586,45 @@
                     <img id="previewCandidateImg" src="" alt="Foto Kandidat" class="img-fluid rounded-4 shadow-sm border mb-3" style="max-height: 260px; width: 100%; object-fit: cover;">
                     <h6 class="fw-extrabold text-dark mb-1" id="previewCandidateName">-</h6>
                     <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1" id="previewCandidateRole">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =======================================================
+         MODAL KHUSUS SUPER ADMIN: RINCIAN PEMILIH PER KATEGORI
+         ======================================================= -->
+    <div class="modal fade" id="superAdminDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content border-0 rounded-4 shadow-lg">
+                <div class="modal-header bg-dark text-white border-0 rounded-top-4 py-3 px-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <img id="saModalCandAvatar" src="" alt="Foto" class="rounded-circle border border-2 border-warning" style="width: 48px; height: 48px; object-fit: cover;">
+                        <div>
+                            <span class="badge bg-warning text-dark fw-bold mb-1" style="font-size: 0.68rem;">RINCIAN DATA PEMILIH</span>
+                            <h5 class="modal-title fw-bold mb-0" id="saModalCandName">-</h5>
+                            <small class="text-white-50" id="saModalCandRole">-</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body p-4 bg-light">
+                    <div class="table-responsive bg-white rounded-4 border shadow-sm">
+                        <table class="table table-bordered align-top mb-0" id="saModalDetailTable">
+                            <thead class="table-light" id="saModalThead">
+                                <!-- Kolom Kategori ke Kanan -->
+                            </thead>
+                            <tbody id="saModalTbody">
+                                <!-- Daftar Nama Siswa ke Bawah per Kategori -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0 bg-white rounded-bottom-4">
+                    <span class="me-auto small text-secondary" id="saModalTotalSummary">Total: 0 suara</span>
+                    <button type="button" class="btn btn-secondary rounded-pill px-4 fw-semibold" data-bs-dismiss="modal">Tutup Rincian</button>
                 </div>
             </div>
         </div>
