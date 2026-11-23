@@ -308,7 +308,7 @@ function renderCandidateCardsGrid() {
                     <div class="candidate-avatar-trigger"
                         title="Klik untuk memperbesar foto ${safeName}"
                         onclick="openCandidatePhotoPreview(event, '${safeName.replace(/'/g, "\\'")}', '${safeRole.replace(/'/g, "\\'")}', '${safeAvatar.replace(/'/g, "\\'")}')">
-                        <img src="${safeAvatar}" alt="${safeName}" class="candidate-wizard-avatar">
+                        <img src="${safeAvatar}" alt="${safeName}" loading="lazy" decoding="async" class="candidate-wizard-avatar">
                         <span class="zoom-hint-badge"><i class="bi bi-zoom-in"></i></span>
                     </div>
 

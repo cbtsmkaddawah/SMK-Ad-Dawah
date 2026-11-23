@@ -6,6 +6,47 @@
 
 let allVotersCache = [];
 let activeVoterSession = null;
+/**
+ * Ambil kode bilik laptop dari parameter URL (contoh: index.html?bilik=01)
+ */
+function getCurrentBoothCode() {
+    const params = new URLSearchParams(window.location.search);
+    const raw = (params.get('bilik') || '01').trim();
+    return raw.padStart(2, '0');
+}
+
+async function markBoothActiveInSupabase(voter) {
+    const boothCode = getCurrentBoothCode();
+    try {
+        await db.from('active_booths').upsert({
+            booth_code: boothCode,
+            booth_name: `Bilik Laptop ${boothCode}`,
+            voter_id: voter.id,
+            voter_name: voter.nama,
+            voter_kelas: voter.kelas,
+            status: 'voting',
+            started_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        }, { onConflict: 'booth_code' });
+    } catch (err) {
+        console.error('Gagal menandai bilik aktif:', err);
+    }
+}
+
+async function clearBoothStatusInSupabase() {
+    const boothCode = getCurrentBoothCode();
+    try {
+        await db.from('active_booths').update({
+            voter_id: null,
+            voter_name: '',
+            voter_kelas: '',
+            status: 'empty',
+            updated_at: new Date().toISOString()
+        }).eq('booth_code', boothCode);
+    } catch (err) {
+        console.error('Gagal mengosongkan status bilik:', err);
+    }
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
     initSecretAdminTrigger();
@@ -203,15 +244,17 @@ function bindCascadingLoginEvents() {
                 return;
             }
 
-            // Login Berhasil -> Masuk ke Bilik Pemilihan Matriks
+            // Login Berhasil -> Tandai bilik aktif di Live Monitoring & masuk bilik pemilihan
             activeVoterSession = {
                 id: voter.id,
                 nama: voter.nama,
                 kelas: voter.kelas
             };
 
+            await markBoothActiveInSupabase(activeVoterSession);
             AppUI.toast(`Selamat datang, ${voter.nama}. Silakan berikan suara Anda.`, 'success');
             await enterMatrixVotingBooth(activeVoterSession);
+            
 
         } catch (err) {
             console.error(err);
@@ -228,6 +271,7 @@ function bindCascadingLoginEvents() {
  * Reset form login untuk pemilih berikutnya
  */
 function resetVoterLoginScreen() {
+    clearBoothStatusInSupabase();
     activeVoterSession = null;
 
     const loginSection = document.getElementById('loginSection');
