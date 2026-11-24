@@ -52,6 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initSecretAdminTrigger();
     await loadVotersForCascadingDropdown();
     bindCascadingLoginEvents();
+    initBoothCallAutoFillListener();
 });
 
 /**
@@ -302,4 +303,57 @@ function resetVoterLoginScreen() {
 
     // Muat ulang cache pemilih
     loadVotersForCascadingDropdown();
+}
+
+/**
+ * Opsi A: Dengarkan panggilan Admin khusus untuk parameter ?bilik=XX ini.
+ * Otomatis mengisi dropdown Kelas & Nama siswa, TANPA mengunci dropdown tersebut.
+ */
+let lastAutoFilledStamp = null;
+
+function initBoothCallAutoFillListener() {
+    const boothCode = getCurrentBoothCode();
+
+    const applyCalledStudentToLoginForm = (boothRow) => {
+        // Jangan ganggu jika sedang berada di halaman bilik voting
+        if (activeVoterSession || !boothRow) return;
+        if (boothRow.status !== 'called' || !boothRow.voter_id) return;
+
+        // Hindari menimpa ulang panggilan yang sama (agar siswa bebas mengganti dropdown jika perlu)
+        const callStamp = `${boothRow.voter_id}_${boothRow.updated_at}`;
+        if (lastAutoFilledStamp === callStamp) return;
+        lastAutoFilledStamp = callStamp;
+
+        const selectKelas = document.getElementById('selectKelas');
+        const selectNama = document.getElementById('selectNama');
+        if (!selectKelas || !selectNama) return;
+
+        // Pilih kelas lalu trigger event change agar dropdown nama terisi (tetap unlocked)
+        if ([...selectKelas.options].some(o => o.value === boothRow.voter_kelas)) {
+            selectKelas.value = boothRow.voter_kelas;
+            selectKelas.dispatchEvent(new Event('change'));
+
+            if ([...selectNama.options].some(o => o.value === boothRow.voter_id)) {
+                selectNama.value = boothRow.voter_id;
+                selectNama.dispatchEvent(new Event('change'));
+                AppUI.toast(`Panggilan Bilik ${boothCode}: ${boothRow.voter_name} (${boothRow.voter_kelas}) silakan masukkan password.`, 'info');
+            }
+        }
+    };
+
+    // Cek awal saat halaman login terbuka
+    db.from('active_booths')
+        .select('*')
+        .eq('booth_code', boothCode)
+        .maybeSingle()
+        .then(({ data }) => applyCalledStudentToLoginForm(data));
+
+    // Dengarkan panggilan Admin secara real-time khusus untuk kode bilik ini
+    db.channel(`booth-autofill-${boothCode}`)
+        .on(
+            'postgres_changes',
+            { event: 'UPDATE', schema: 'public', table: 'active_booths', filter: `booth_code=eq.${boothCode}` },
+            (payload) => applyCalledStudentToLoginForm(payload.new)
+        )
+        .subscribe();
 }

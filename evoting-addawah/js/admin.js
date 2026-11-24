@@ -9,6 +9,9 @@ let adminCandidates = [];
 let adminVoters = [];
 let adminVoteCounts = [];
 let adminVoteLogs = [];
+let adminBooths = [];
+let adminCallerClassFilter = 'ALL';
+let adminRealtimeInitialized = false;
 let currentAdminUser = null;
 let electionChartInstance = null;
 let currentChartType = 'bar';
@@ -23,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCategoryCRUD();
     initVoterCRUDAndExcel();
     initWebCustomizationSettings();
+    initBoothCallerControls();
 });
 
 /* ============================================================
@@ -126,19 +130,21 @@ async function refreshAllAdminData() {
             db.from('candidates').select('*').order('urutan', { ascending: true }),
             db.from('voters').select('*').order('kelas', { ascending: true }).order('nama', { ascending: true }),
             db.from('vote_counts').select('*'),
-            db.from('settings').select('*').eq('id', 1).single()
+            db.from('settings').select('*').eq('id', 1).single(),
+            db.from('active_booths').select('*').order('booth_code', { ascending: true })
         ];
 
         if (isSuperAdmin) {
             queries.push(db.from('vote_logs').select('*').order('created_at', { ascending: true }));
         }
 
-        const [catRes, candRes, voterRes, voteRes, setRes, logsRes] = await Promise.all(queries);
+        const [catRes, candRes, voterRes, voteRes, setRes, boothRes, logsRes] = await Promise.all(queries);
 
         adminCategories = catRes.data || [];
         adminCandidates = candRes.data || [];
         adminVoters = voterRes.data || [];
         adminVoteCounts = voteRes.data || [];
+        adminBooths = boothRes.data || [];
         adminVoteLogs = isSuperAdmin && logsRes ? (logsRes.data || []) : [];
 
         updateSummaryStatCards();
@@ -146,12 +152,21 @@ async function refreshAllAdminData() {
         renderPodiumWinners();
         renderInteractiveChart();
         renderSuperAdminCandidateAudit();
+        renderBoothCallerPanel();
         renderCandidatesGrid();
         renderCategoriesTable();
         populateVoterClassFilter();
         renderVotersTable();
-        if (setRes.data) populateSettingsForm(setRes.data);
 
+        if (setRes.data) {
+            populateSettingsForm(setRes.data);
+            populateVoiceConfigForm(setRes.data);
+        }
+
+        // Aktifkan sinkronisasi otomatis saat siswa login / selesai voting di bilik
+        if (!adminRealtimeInitialized) {
+            initAdminRealtimeSync();
+        }
     } catch (err) {
         console.error('Gagal memuat data admin:', err);
         AppUI.toast('Gagal memuat sebagian data dari Supabase.', 'danger');
@@ -1123,3 +1138,383 @@ function exportElectionReportToExcel() {
     XLSX.writeFile(wb, `Laporan_EVoting_SMK_Addawah_${new Date().toISOString().slice(0, 10)}.xlsx`);
     AppUI.toast('Laporan Excel berhasil diunduh!', 'success');
 }
+
+/* ============================================================
+   8. PEMANGGIL BILIK DINAMIS, PENGATURAN SUARA & SINKRONISASI REALTIME
+   ============================================================ */
+function initAdminRealtimeSync() {
+    adminRealtimeInitialized = true;
+
+    let refreshDebounce = null;
+    const triggerLightRefresh = () => {
+        clearTimeout(refreshDebounce);
+        refreshDebounce = setTimeout(async () => {
+            const [voterRes, boothRes, voteRes] = await Promise.all([
+                db.from('voters').select('*').order('kelas', { ascending: true }).order('nama', { ascending: true }),
+                db.from('active_booths').select('*').order('booth_code', { ascending: true }),
+                db.from('vote_counts').select('*')
+            ]);
+            if (voterRes.data) adminVoters = voterRes.data;
+            if (boothRes.data) adminBooths = boothRes.data;
+            if (voteRes.data) adminVoteCounts = voteRes.data;
+
+            updateSummaryStatCards();
+            renderPodiumWinners();
+            renderInteractiveChart();
+            renderBoothCallerPanel();
+            renderVotersTable();
+        }, 400);
+    };
+
+    db.channel('admin-live-sync')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'active_booths' }, triggerLightRefresh)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'voters' }, triggerLightRefresh)
+        .subscribe();
+}
+
+function initBoothCallerControls() {
+    document.getElementById('callerSearchInput')?.addEventListener('input', renderCallerStudentsTable);
+    document.getElementById('callerStatusFilter')?.addEventListener('change', renderCallerStudentsTable);
+
+    // Tambah Bilik Dinamis
+    document.getElementById('btnAddDynamicBooth')?.addEventListener('click', async () => {
+        let maxNum = 0;
+        adminBooths.forEach(b => {
+            const num = parseInt(b.booth_code, 10);
+            if (!isNaN(num) && num > maxNum) maxNum = num;
+        });
+        const nextCode = String(maxNum + 1).padStart(2, '0');
+
+        const { error } = await db.from('active_booths').insert([{
+            booth_code: nextCode,
+            booth_name: `Bilik Laptop ${nextCode}`,
+            status: 'empty'
+        }]);
+
+        if (error) {
+            AppUI.toast('Gagal menambah bilik baru.', 'danger');
+            return;
+        }
+        AppUI.toast(`Bilik Laptop ${nextCode} berhasil ditambahkan! URL: index.html?bilik=${nextCode}`, 'success');
+        await refreshAllAdminData();
+    });
+
+    // Update label kecepatan suara
+    document.getElementById('adminVoiceRate')?.addEventListener('input', (e) => {
+        updateAdminVoiceRateLabel(e.target.value);
+    });
+
+    // Simpan Pengaturan Suara ke tabel settings
+    document.getElementById('btnSaveVoiceConfig')?.addEventListener('click', async () => {
+        const style = document.getElementById('adminVoiceStyle').value;
+        const rate = parseFloat(document.getElementById('adminVoiceRate').value);
+
+        const { error } = await db.from('settings').update({
+            voice_style: style,
+            voice_rate: rate,
+            updated_at: new Date().toISOString()
+        }).eq('id', 1);
+
+        if (error) {
+            AppUI.toast('Gagal menyimpan pengaturan suara.', 'danger');
+            return;
+        }
+        AppUI.toast('Pengaturan suara berhasil disimpan dan langsung diterapkan ke live.html!', 'success');
+    });
+
+    // Tombol Tes Suara -> Dikirim ke live_announcements agar berbunyi di TV live.html
+    document.getElementById('btnTestVoiceLogin')?.addEventListener('click', async () => {
+        await db.from('live_announcements').insert([{
+            event_type: 'test_login',
+            student_name: 'Alif Rahman Hakim',
+            kelas: 'X TKJ 1',
+            booth_code: '01'
+        }]);
+        AppUI.toast('Sinyal Tes Panggilan Bilik dikirim ke layar live.html!', 'info');
+    });
+
+    document.getElementById('btnTestVoiceDone')?.addEventListener('click', async () => {
+        await db.from('live_announcements').insert([{
+            event_type: 'test_done',
+            student_name: 'Nabila Zahra Putri',
+            kelas: 'X TKJ 1',
+            class_pct: 85
+        }]);
+        AppUI.toast('Sinyal Tes Selesai Voting dikirim ke layar live.html!', 'info');
+    });
+}
+
+function populateVoiceConfigForm(settings) {
+    const styleEl = document.getElementById('adminVoiceStyle');
+    const rateEl = document.getElementById('adminVoiceRate');
+    if (styleEl && settings.voice_style) styleEl.value = settings.voice_style;
+    if (rateEl && settings.voice_rate) {
+        rateEl.value = settings.voice_rate;
+        updateAdminVoiceRateLabel(settings.voice_rate);
+    }
+}
+
+function updateAdminVoiceRateLabel(val) {
+    const num = parseFloat(val);
+    const desc = num >= 1.25 ? 'Cepat' : num >= 1.1 ? 'Sigap' : 'Normal';
+    const el = document.getElementById('adminVoiceRateLabel');
+    if (el) el.textContent = `${num}x (${desc})`;
+}
+
+function renderBoothCallerPanel() {
+    renderAdminBoothsStrip();
+    renderCallerClassPills();
+    renderCallerStudentsTable();
+}
+
+function renderAdminBoothsStrip() {
+    const container = document.getElementById('adminBoothsStripGrid');
+    if (!container) return;
+
+    if (adminBooths.length === 0) {
+        container.innerHTML = '<div class="col-12 text-muted small">Belum ada bilik terdaftar. Klik "Tambah Bilik Laptop".</div>';
+        return;
+    }
+
+    container.innerHTML = adminBooths.map(b => {
+        const isOccupied = b.status !== 'empty' && b.voter_id;
+        const isVoting = b.status === 'voting';
+
+        if (isOccupied) {
+            return `
+                <div class="col-6 col-md-4 col-xl-2">
+                    <div class="p-3 rounded-4 border ${isVoting ? 'bg-success-subtle border-success' : 'bg-warning-subtle border-warning'} h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-extrabold small text-dark">${AppUI.escapeHtml(b.booth_name)}</span>
+                                <span class="badge ${isVoting ? 'bg-success' : 'bg-warning text-dark'}" style="font-size: 0.65rem;">
+                                    ${isVoting ? 'Memilih' : 'Dipanggil'}
+                                </span>
+                            </div>
+                            <div class="fw-bold small text-dark text-truncate" title="${AppUI.escapeHtml(b.voter_name)}">
+                                ${AppUI.escapeHtml(b.voter_name)}
+                            </div>
+                            <div class="text-secondary" style="font-size: 0.72rem;">${AppUI.escapeHtml(b.voter_kelas)}</div>
+                        </div>
+                        <div class="d-flex gap-1 mt-2 pt-2 border-top border-dark border-opacity-10">
+                            <button class="btn btn-light btn-sm py-0 px-2 border flex-grow-1" style="font-size: 0.7rem;" title="Panggil Ulang Suara" onclick="recallStudentBooth('${b.booth_code}')">
+                                <i class="bi bi-volume-up-fill text-success"></i> Ulang
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm py-0 px-2" style="font-size: 0.7rem;" title="Batalkan / Kosongkan Bilik" onclick="cancelBoothAssignment('${b.booth_code}')">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            return `
+                <div class="col-6 col-md-4 col-xl-2">
+                    <div class="p-3 rounded-4 border border-dashed bg-light h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-extrabold small text-secondary">${AppUI.escapeHtml(b.booth_name)}</span>
+                                <span class="badge bg-secondary-subtle text-secondary" style="font-size: 0.65rem;">Kosong</span>
+                            </div>
+                            <div class="text-success fw-semibold" style="font-size: 0.72rem;">Siap Dipanggil</div>
+                            <div class="text-muted" style="font-size: 0.68rem;">?bilik=${AppUI.escapeHtml(b.booth_code)}</div>
+                        </div>
+                        <div class="mt-2 text-end">
+                            <button class="btn btn-link text-danger p-0 text-decoration-none" style="font-size: 0.72rem;" onclick="deleteDynamicBooth('${b.booth_code}')">
+                                <i class="bi bi-trash3"></i> Hapus
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }).join('');
+}
+
+function renderCallerClassPills() {
+    const wrap = document.getElementById('callerClassPills');
+    if (!wrap) return;
+
+    const classes = [...new Set(adminVoters.map(v => v.kelas))].sort();
+    let html = `
+        <button type="button" class="btn btn-sm rounded-3 ${adminCallerClassFilter === 'ALL' ? 'btn-success fw-bold' : 'btn-outline-success'}" onclick="setCallerClassFilter('ALL')">
+            Semua Kelas
+        </button>
+    `;
+
+    classes.forEach(cls => {
+        const active = adminCallerClassFilter === cls;
+        html += `
+            <button type="button" class="btn btn-sm rounded-3 ${active ? 'btn-success fw-bold' : 'btn-outline-success'}" onclick="setCallerClassFilter('${AppUI.escapeHtml(cls).replace(/'/g, "\\'")}')">
+                ${AppUI.escapeHtml(cls)}
+            </button>
+        `;
+    });
+
+    wrap.innerHTML = html;
+}
+
+window.setCallerClassFilter = function (cls) {
+    adminCallerClassFilter = cls;
+    renderCallerClassPills();
+    renderCallerStudentsTable();
+};
+
+function renderCallerStudentsTable() {
+    const tbody = document.getElementById('callerStudentsTbody');
+    const countBadge = document.getElementById('callerFilteredCount');
+    if (!tbody) return;
+
+    const query = (document.getElementById('callerSearchInput')?.value || '').trim().toLowerCase();
+    const statusFilter = document.getElementById('callerStatusFilter')?.value || 'ALL';
+
+    const enriched = adminVoters.map(v => {
+        const assignedBooth = adminBooths.find(b => b.status !== 'empty' && String(b.voter_id) === String(v.id));
+        let liveStatus = 'belum';
+        if (v.has_voted) liveStatus = 'sudah';
+        else if (assignedBooth) liveStatus = 'bilik';
+        return { ...v, liveStatus, assignedBooth };
+    });
+
+    const filtered = enriched.filter(v => {
+        const matchClass = adminCallerClassFilter === 'ALL' || v.kelas === adminCallerClassFilter;
+        const matchStatus = statusFilter === 'ALL' || v.liveStatus === statusFilter;
+        const matchQuery = !query || v.nama.toLowerCase().includes(query) || v.kelas.toLowerCase().includes(query);
+        return matchClass && matchStatus && matchQuery;
+    });
+
+    if (countBadge) countBadge.textContent = `${filtered.length} Pemilih`;
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted small">Tidak ada pemilih yang sesuai filter.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = filtered.slice(0, 100).map(v => {
+        let badgeHtml = '';
+        let actionHtml = '';
+
+        if (v.liveStatus === 'sudah') {
+            badgeHtml = '<span class="badge bg-success-subtle text-success rounded-pill"><i class="bi bi-check-circle-fill me-1"></i>Sudah Memilih</span>';
+            actionHtml = '<span class="small text-muted fst-italic">Otomatis sinkron selesai</span>';
+        } else if (v.liveStatus === 'bilik') {
+            const b = v.assignedBooth;
+            const isVoting = b.status === 'voting';
+            badgeHtml = `<span class="badge ${isVoting ? 'bg-success' : 'bg-warning text-dark'} rounded-pill">${isVoting ? 'Memilih' : 'Dipanggil'} di B${AppUI.escapeHtml(b.booth_code)}</span>`;
+            actionHtml = `
+                <div class="d-flex justify-content-end gap-1">
+                    <button class="btn btn-warning btn-sm fw-bold text-dark" onclick="recallStudentBooth('${b.booth_code}')">
+                        <i class="bi bi-megaphone-fill me-1"></i>Panggil Ulang
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm" title="Batalkan Panggilan" onclick="cancelBoothAssignment('${b.booth_code}')">
+                        Batal
+                    </button>
+                </div>
+            `;
+        } else {
+            badgeHtml = '<span class="badge bg-secondary-subtle text-secondary rounded-pill">Belum Memilih</span>';
+            const btns = adminBooths.map(b => {
+                const busy = b.status !== 'empty' && b.voter_id;
+                if (busy) {
+                    return `<button disabled class="btn btn-light btn-sm border text-muted" style="font-size:0.72rem;" title="Terisi oleh ${AppUI.escapeHtml(b.voter_name)}">B${AppUI.escapeHtml(b.booth_code)}</button>`;
+                }
+                return `<button class="btn btn-emerald btn-sm py-1 px-2" style="font-size:0.72rem;" onclick="callStudentToBooth('${v.id}', '${b.booth_code}')">Bilik ${AppUI.escapeHtml(b.booth_code)}</button>`;
+            }).join('');
+            actionHtml = `<div class="d-flex flex-wrap justify-content-end gap-1">${btns}</div>`;
+        }
+
+        return `
+            <tr>
+                <td class="fw-bold text-dark small">${AppUI.escapeHtml(v.nama)}</td>
+                <td><span class="badge bg-light text-dark border">${AppUI.escapeHtml(v.kelas)}</span></td>
+                <td>${badgeHtml}</td>
+                <td class="text-end">${actionHtml}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+window.callStudentToBooth = async function (voterId, boothCode) {
+    const voter = adminVoters.find(v => String(v.id) === String(voterId));
+    if (!voter) return;
+
+    try {
+        // 1. Update status bilik menjadi 'called' agar laptop ?bilik=XX auto-fill & muncul di live.html
+        const { error: boothErr } = await db.from('active_booths').update({
+            voter_id: voter.id,
+            voter_name: voter.nama,
+            voter_kelas: voter.kelas,
+            status: 'called',
+            started_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        }).eq('booth_code', boothCode);
+
+        if (boothErr) throw boothErr;
+
+        // 2. Kirim event suara ke live.html
+        await db.from('live_announcements').insert([{
+            event_type: 'booth_call',
+            student_name: voter.nama,
+            kelas: voter.kelas,
+            booth_code: boothCode
+        }]);
+
+        AppUI.toast(`Memanggil ${voter.nama} (${voter.kelas}) ke Bilik ${boothCode}. Suara berbunyi di live.html!`, 'success');
+    } catch (err) {
+        console.error(err);
+        AppUI.toast('Gagal memanggil siswa ke bilik.', 'danger');
+    }
+};
+
+window.recallStudentBooth = async function (boothCode) {
+    const booth = adminBooths.find(b => b.booth_code === boothCode);
+    if (!booth || !booth.voter_name) return;
+
+    await db.from('live_announcements').insert([{
+        event_type: 'booth_recall',
+        student_name: booth.voter_name,
+        kelas: booth.voter_kelas,
+        booth_code: boothCode
+    }]);
+    AppUI.toast(`Panggilan ulang untuk ${booth.voter_name} dikirim ke layar live.html!`, 'info');
+};
+
+window.cancelBoothAssignment = async function (boothCode) {
+    const booth = adminBooths.find(b => b.booth_code === boothCode);
+    if (!booth) return;
+
+    AppUI.confirm(
+        `Kosongkan ${booth.booth_name}?`,
+        `Batalkan panggilan/sesi <strong>${AppUI.escapeHtml(booth.voter_name)}</strong> di bilik ini? (Status suara siswa tetap Belum Memilih).`,
+        async () => {
+            await db.from('active_booths').update({
+                voter_id: null,
+                voter_name: '',
+                voter_kelas: '',
+                status: 'empty',
+                updated_at: new Date().toISOString()
+            }).eq('booth_code', boothCode);
+            AppUI.toast(`${booth.booth_name} berhasil dikosongkan.`, 'info');
+        },
+        'Ya, Kosongkan',
+        'btn-warning'
+    );
+};
+
+window.deleteDynamicBooth = function (boothCode) {
+    AppUI.confirm(
+        `Hapus Bilik Laptop ${boothCode}?`,
+        'Bilik yang dihapus tidak lagi tampil di panel pemanggil dan layar live.',
+        async () => {
+            const { error } = await db.from('active_booths').delete().eq('booth_code', boothCode);
+            if (error) {
+                AppUI.toast('Gagal menghapus bilik.', 'danger');
+                return;
+            }
+            AppUI.toast(`Bilik Laptop ${boothCode} telah dihapus.`, 'success');
+            await refreshAllAdminData();
+        },
+        'Ya, Hapus Bilik',
+        'btn-danger'
+    );
+};

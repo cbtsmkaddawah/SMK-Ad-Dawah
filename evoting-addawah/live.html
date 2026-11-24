@@ -171,7 +171,17 @@
                 </div>
 
                 <!-- Kanan: Live Indicator + Tombol Menonjol Cetak Bukti Partisipasi -->
+               <!-- Kanan: Kontrol Suara Live + Live Indicator + Tombol Cetak (Tersembunyi kecuali ?cetak=1) -->
                 <div class="flex flex-wrap items-center gap-3 sm:gap-4 ml-auto">
+                    <!-- Tombol Aktivasi & Status Audio Smart Queue -->
+                    <button onclick="toggleAudio()" id="btn-audio-toggle" class="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-xs font-extrabold transition-all shadow-sm cursor-pointer" title="Klik untuk mengaktifkan / mematikan suara pengumuman TV">
+                        <span id="audio-wave-icon" class="text-sm leading-none">&#128266;</span>
+                        <div class="text-left leading-tight">
+                            <span id="audio-status-label" class="block">Suara: AKTIF</span>
+                            <span id="queue-status-label" class="block text-[10px] font-semibold text-amber-700">Antrean: Siap</span>
+                        </div>
+                    </button>
+
                     <div class="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 px-3.5 py-2 rounded-2xl">
                         <span class="relative flex h-3 w-3">
                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
@@ -183,8 +193,8 @@
                         </div>
                     </div>
 
-                    <!-- TOMBOL MENONJOL UNTUK SISWA CETAK BUKTI PARTISIPASI -->
-                    <button onclick="openProofAuthModal()" class="btn-proof-highlight inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-2xl text-white text-xs sm:text-sm font-extrabold transition-all active:scale-95 cursor-pointer">
+                    <!-- TOMBOL CETAK BUKTI: Default HIDDEN (Hanya tampil saat live.html?cetak=1) -->
+                    <button id="btnHeaderProofCetak" onclick="openProofAuthModal()" class="hidden btn-proof-highlight inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-2xl text-white text-xs sm:text-sm font-extrabold transition-all active:scale-95 cursor-pointer">
                         <svg class="w-4 h-4 sm:w-5 sm:h-5 text-amber-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                         </svg>
@@ -194,11 +204,29 @@
             </div>
         </header>
 
+        <!-- BANNER PENGUMUMAN SUARA ON AIR -->
+        <div id="live-announcement-banner" class="hidden bg-gradient-to-r from-emerald-900 via-emerald-800 to-emerald-900 text-white border-b-2 border-amber-400 shadow-lg">
+            <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="px-2.5 py-1 rounded-lg bg-amber-400 text-emerald-950 font-extrabold text-xs uppercase tracking-wider shrink-0 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-950 animate-ping"></span>
+                        ON AIR
+                    </span>
+                    <p id="announcement-banner-text" class="text-xs sm:text-sm font-bold text-amber-100 truncate">
+                        Mempersiapkan pengumuman...
+                    </p>
+                </div>
+                <button onclick="stopCurrentSpeech()" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-950/60 hover:bg-emerald-950 text-emerald-200 border border-emerald-600 shrink-0 cursor-pointer">
+                    Hentikan Suara
+                </button>
+            </div>
+        </div>
+
         <!-- KONTEN UTAMA LIVE MONITORING -->
         <main class="flex-grow max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
             <!-- BANNER AJAKAN CETAK BUKTI UNTUK SISWA YANG SUDAH MEMILIH -->
-            <div class="rounded-2xl bg-gradient-to-r from-emerald-800 via-emerald-700 to-emerald-600 border-2 border-amber-400/70 px-5 py-3.5 text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div id="proofPromoBanner" class="hidden rounded-2xl bg-gradient-to-r from-emerald-800 via-emerald-700 to-emerald-600 border-2 border-amber-400/70 px-5 py-3.5 text-white shadow-md flex-col sm:flex-row items-center justify-between gap-3">
                 <div class="flex items-center gap-3 text-center sm:text-left">
                     <div class="w-10 h-10 rounded-xl bg-amber-400 text-emerald-950 flex items-center justify-center shrink-0 font-bold shadow">
                         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -734,22 +762,50 @@
         // ==========================================
         // 1. INISIALISASI & REALTIME SUPABASE
         // ==========================================
+        let liveVoiceConfig = { style: 'energik', rate: 1.15 };
+
         document.addEventListener('DOMContentLoaded', async () => {
             updateClock();
             setInterval(updateClock, 1000);
             setInterval(updateBoothDurationsOnly, 1000);
 
-            // Terapkan Logo, Nama Sekolah & Background Gedung dari tabel settings
-            await AppUI.loadAndApplySettings();
+            // Tampilkan tombol Cetak Bukti HANYA jika dibuka dengan parameter ?cetak=1
+            const params = new URLSearchParams(window.location.search);
+            const isCetakMode = params.get('cetak') === '1';
+            if (isCetakMode) {
+                document.getElementById('btnHeaderProofCetak')?.classList.remove('hidden');
+                const promoBanner = document.getElementById('proofPromoBanner');
+                if (promoBanner) {
+                    promoBanner.classList.remove('hidden');
+                    promoBanner.classList.add('flex');
+                }
+            }
 
-            // Muat data awal
+            // Muat pengaturan tema & suara dari Supabase
+            const settings = await AppUI.loadAndApplySettings();
+            if (settings) {
+                liveVoiceConfig.style = settings.voice_style || 'energik';
+                liveVoiceConfig.rate = parseFloat(settings.voice_rate || 1.15);
+            }
+
             await fetchAllLiveMonitoringData();
 
-            // Pasang Supabase Realtime untuk update instan
-            subscribeSupabaseRealtime();
+            // Realtime khusus layar TV (tanpa ?cetak=1) untuk suara & update instan
+            if (!isCetakMode) {
+                subscribeLiveTvRealtime();
+                // Fallback polling ringan tiap 8 detik
+                setInterval(() => {
+                    if (!document.hidden) fetchAllLiveMonitoringData();
+                }, 8000);
+            } else {
+                // Mode cetak siswa: matikan audio agar HP siswa tidak bersuara
+                audioEnabled = false;
+                document.getElementById('btn-audio-toggle')?.classList.add('hidden');
+            }
 
-            // Fallback polling ringan tiap 8 detik untuk menjaga sinkronisasi tetap stabil
-            setInterval(fetchAllLiveMonitoringData, 8000);
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+            }
 
             bindProofModalEvents();
         });
@@ -847,29 +903,33 @@
             const countBadge = document.getElementById('active-booth-count');
             if (!container) return;
 
-            const booths = liveBoothsData.length > 0 ? liveBoothsData : [
-                { booth_code: '01', booth_name: 'Bilik Laptop 01', status: 'empty' },
-                { booth_code: '02', booth_name: 'Bilik Laptop 02', status: 'empty' },
-                { booth_code: '03', booth_name: 'Bilik Laptop 03', status: 'empty' }
-            ];
+            const booths = liveBoothsData || [];
+            if (booths.length === 0) {
+                countBadge.textContent = '0 Bilik';
+                container.innerHTML = '<div class="col-span-3 text-center py-8 text-sm text-slate-400">Belum ada bilik laptop terdaftar.</div>';
+                return;
+            }
 
-            const activeCount = booths.filter(b => b.status === 'voting' && b.voter_name).length;
+            const activeCount = booths.filter(b => b.status !== 'empty' && b.voter_name).length;
             countBadge.textContent = `${activeCount} dari ${booths.length} Bilik Aktif`;
 
             container.innerHTML = booths.map(booth => {
-                if (booth.status === 'voting' && booth.voter_name) {
+                const isOccupied = booth.status !== 'empty' && booth.voter_name;
+                const isVoting = booth.status === 'voting';
+
+                if (isOccupied) {
                     const safeName = AppUI.escapeHtml(booth.voter_name);
                     const safeKelas = AppUI.escapeHtml(booth.voter_kelas);
                     const safeBooth = AppUI.escapeHtml(booth.booth_name || `Bilik Laptop ${booth.booth_code}`);
 
                     return `
-                        <div class="rounded-2xl bg-gradient-to-b from-emerald-50 to-white border-2 border-emerald-500/60 p-4 shadow-sm relative overflow-hidden">
+                        <div class="rounded-2xl bg-gradient-to-b ${isVoting ? 'from-emerald-50 to-white border-emerald-500/70' : 'from-amber-50 to-white border-amber-400'} border-2 p-4 shadow-sm relative overflow-hidden">
                             <div class="flex items-center justify-between mb-3">
-                                <span class="px-2.5 py-0.5 rounded-lg bg-emerald-800 text-white text-[11px] font-extrabold tracking-wide">
+                                <span class="px-2.5 py-0.5 rounded-lg ${isVoting ? 'bg-emerald-800' : 'bg-amber-600'} text-white text-[11px] font-extrabold tracking-wide">
                                     ${safeBooth}
                                 </span>
-                                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-ping"></span>
+                                <span class="inline-flex items-center gap-1 text-[11px] font-bold ${isVoting ? 'text-emerald-700 bg-emerald-100' : 'text-amber-800 bg-amber-100'} px-2 py-0.5 rounded-full">
+                                    <span class="w-1.5 h-1.5 rounded-full ${isVoting ? 'bg-emerald-600' : 'bg-amber-500'} animate-ping"></span>
                                     <span data-booth-started="${booth.started_at || ''}">${getElapsedMMSS(booth.started_at)}</span>
                                 </span>
                             </div>
@@ -888,15 +948,9 @@
                                 </div>
                             </div>
 
-                            <div class="pt-2.5 border-t border-emerald-100 flex items-center justify-between text-[11px] font-semibold text-emerald-700">
-                                <span class="flex items-center gap-1.5">
-                                    <svg class="w-3.5 h-3.5 animate-spin text-emerald-600" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                                    </svg>
-                                    Sedang memilih...
-                                </span>
-                                <span class="text-emerald-600 font-bold">Aktif</span>
+                            <div class="pt-2.5 border-t border-emerald-100 flex items-center justify-between text-[11px] font-semibold ${isVoting ? 'text-emerald-700' : 'text-amber-700'}">
+                                <span>${isVoting ? 'Sedang memilih...' : 'Dipanggil ke bilik...'}</span>
+                                <span class="font-bold">${isVoting ? 'Login Aktif' : 'Menuju Bilik'}</span>
                             </div>
                         </div>
                     `;
@@ -913,7 +967,7 @@
                                 </svg>
                             </div>
                             <p class="text-xs font-bold text-slate-600">Bilik Siap Digunakan</p>
-                            <p class="text-[11px] text-slate-400">Menunggu pemilih berikutnya</p>
+                            <p class="text-[11px] text-slate-400">Menunggu panggilan admin</p>
                         </div>
                     `;
                 }
@@ -1346,6 +1400,239 @@
             `;
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 3200);
+        }
+
+        // ==========================================
+        // 8. SMART VOICE QUEUE ENGINE & REALTIME TV
+        // ==========================================
+        let audioEnabled = true;
+        let speechQueue = [];
+        let isSpeaking = false;
+        let doneBatchBuffer = [];
+        let doneBatchTimer = null;
+
+        function subscribeLiveTvRealtime() {
+            db.channel('live-tv-realtime')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'live_announcements' }, (payload) => {
+                    handleIncomingAnnouncement(payload.new);
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'active_booths' }, () => {
+                    fetchAllLiveMonitoringData();
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'voters' }, () => {
+                    fetchAllLiveMonitoringData();
+                })
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'settings' }, (payload) => {
+                    if (payload.new) {
+                        liveVoiceConfig.style = payload.new.voice_style || 'energik';
+                        liveVoiceConfig.rate = parseFloat(payload.new.voice_rate || 1.15);
+                    }
+                })
+                .subscribe();
+        }
+
+        function handleIncomingAnnouncement(row) {
+            if (!row) return;
+            if (row.event_type === 'booth_call' || row.event_type === 'test_login') {
+                announceBoothCall(row.student_name, row.kelas, row.booth_code, false);
+            } else if (row.event_type === 'booth_recall') {
+                announceBoothCall(row.student_name, row.kelas, row.booth_code, true);
+            } else if (row.event_type === 'vote_done' || row.event_type === 'test_done') {
+                announceVoteCompleted(row.student_name, row.kelas, row.class_pct || 0);
+            }
+        }
+
+        function formatKelasForSpeech(kelas = '') {
+            return kelas
+                .replace(/^XII\b/i, 'Dua Belas')
+                .replace(/^XI\b/i, 'Sebelas')
+                .replace(/^X\b/i, 'Sepuluh')
+                .replace(/TKJ/gi, 'T K J')
+                .replace(/RPL/gi, 'R P L')
+                .replace(/AKL/gi, 'A K L')
+                .replace(/BDP/gi, 'B D P')
+                .replace(/MM/gi, 'Multimedia');
+        }
+
+        function formatShortName(fullName = '') {
+            return fullName.trim().split(/\s+/).slice(0, 2).join(' ');
+        }
+
+        function announceBoothCall(studentName, className, boothCode, isRecall = false) {
+            const shortName = formatShortName(studentName);
+            const spokenClass = formatKelasForSpeech(className);
+            const boothNum = parseInt(boothCode, 10) || boothCode;
+            const style = liveVoiceConfig.style || 'energik';
+
+            let variations = [];
+            if (isRecall) {
+                variations = [
+                    `Panggilan ulang untuk ${shortName}, kelas ${spokenClass}, segera menuju Bilik ${boothNum}.`,
+                    `Perhatian ${shortName} dari ${spokenClass}, Bilik Laptop ${boothNum} sudah siap.`
+                ];
+            } else if (style === 'formal') {
+                variations = [
+                    `Silakan menuju Bilik ${boothNum}, ${shortName}, kelas ${spokenClass}.`,
+                    `Panggilan Bilik ${boothNum}, ${shortName} dari ${spokenClass}, silakan menggunakan hak pilih.`
+                ];
+            } else if (style === 'santuy') {
+                variations = [
+                    `Giliran ${shortName} dari ${spokenClass}! Ayo menuju Bilik ${boothNum}, layar sudah siap!`,
+                    `Waktunya menentukan pilihan! ${shortName}, ${spokenClass}, silakan masuk Bilik ${boothNum}!`
+                ];
+            } else {
+                variations = [
+                    `Silakan masuk Bilik ${boothNum}, ${shortName} kelas ${spokenClass}, selamat memilih!`,
+                    `Panggilan Bilik ${boothNum} untuk ${shortName} dari ${spokenClass}, silakan menuju laptop bilik!`
+                ];
+            }
+
+            const text = variations[Math.floor(Math.random() * variations.length)];
+            enqueueSpeech(text, 'normal');
+        }
+
+        function announceVoteCompleted(studentName, className, classPct) {
+            const shortName = formatShortName(studentName);
+            const spokenClass = formatKelasForSpeech(className);
+
+            if (classPct >= 100) {
+                const milestone = `Luar biasa! Tepuk tangan meriah untuk kelas ${spokenClass} yang telah mencapai seratus persen partisipasi pemilih!`;
+                enqueueSpeech(milestone, 'priority');
+                return;
+            }
+
+            doneBatchBuffer.push({ name: shortName, spokenClass, pct: classPct });
+            clearTimeout(doneBatchTimer);
+            doneBatchTimer = setTimeout(() => {
+                if (doneBatchBuffer.length === 0) return;
+
+                let text = '';
+                const style = liveVoiceConfig.style || 'energik';
+
+                if (doneBatchBuffer.length === 1) {
+                    const item = doneBatchBuffer[0];
+                    if (style === 'formal') {
+                        text = `Terima kasih ${item.name}, kelas ${item.spokenClass}, suara sah telah tercatat.`;
+                    } else if (style === 'santuy') {
+                        text = `Mantap ${item.name}! Partisipasi kelas ${item.spokenClass} kini mencapai ${item.pct} persen!`;
+                    } else {
+                        text = `Terima kasih ${item.name} dari ${item.spokenClass}, suara Anda berhasil disimpan!`;
+                    }
+                } else if (doneBatchBuffer.length <= 3) {
+                    const names = doneBatchBuffer.map(i => i.name).join(', ');
+                    text = `Terima kasih kepada ${names} yang baru saja memberikan suaranya!`;
+                } else {
+                    text = `Luar biasa! ${doneBatchBuffer.length} suara baru saja masuk secara bersamaan!`;
+                }
+
+                doneBatchBuffer = [];
+                enqueueSpeech(text, 'normal');
+            }, 2200);
+        }
+
+        function enqueueSpeech(text, priority = 'normal') {
+            showAnnouncementBanner(text);
+            if (!audioEnabled || !('speechSynthesis' in window)) return;
+
+            if (priority === 'priority') {
+                window.speechSynthesis.cancel();
+                speechQueue.unshift(text);
+                isSpeaking = false;
+            } else {
+                if (speechQueue.length >= 3) speechQueue.shift();
+                speechQueue.push(text);
+            }
+
+            updateQueueIndicator();
+            processNextSpeech();
+        }
+
+        function processNextSpeech() {
+            if (isSpeaking || speechQueue.length === 0) {
+                updateQueueIndicator();
+                return;
+            }
+
+            const nextText = speechQueue.shift();
+            isSpeaking = true;
+            updateQueueIndicator();
+            showAnnouncementBanner(nextText);
+
+            const utterance = new SpeechSynthesisUtterance(nextText);
+            utterance.lang = 'id-ID';
+            utterance.rate = parseFloat(liveVoiceConfig.rate || 1.15);
+            utterance.pitch = 1.06;
+
+            const voices = window.speechSynthesis.getVoices();
+            const idVoice = voices.find(v => v.lang.toLowerCase().includes('id-id') || v.lang.toLowerCase().includes('id_id'));
+            if (idVoice) utterance.voice = idVoice;
+
+            utterance.onend = () => {
+                isSpeaking = false;
+                updateQueueIndicator();
+                if (speechQueue.length === 0) {
+                    setTimeout(() => { if (!isSpeaking) hideAnnouncementBanner(); }, 1800);
+                } else {
+                    processNextSpeech();
+                }
+            };
+
+            utterance.onerror = () => {
+                isSpeaking = false;
+                updateQueueIndicator();
+                processNextSpeech();
+            };
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function stopCurrentSpeech() {
+            speechQueue = [];
+            doneBatchBuffer = [];
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            isSpeaking = false;
+            updateQueueIndicator();
+            hideAnnouncementBanner();
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            const btn = document.getElementById('btn-audio-toggle');
+            const label = document.getElementById('audio-status-label');
+            const icon = document.getElementById('audio-wave-icon');
+
+            if (audioEnabled) {
+                btn.className = 'flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-xs font-extrabold transition-all shadow-sm cursor-pointer';
+                label.textContent = 'Suara: AKTIF';
+                icon.innerHTML = '&#128266;';
+                // Memancing unlock audio browser agar langsung siap bersuara
+                enqueueSpeech('Audio sistem live monitoring aktif.', 'normal');
+            } else {
+                stopCurrentSpeech();
+                btn.className = 'flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-600 text-xs font-bold transition-all cursor-pointer';
+                label.textContent = 'Suara: MUTE';
+                icon.innerHTML = '&#128263;';
+            }
+            updateQueueIndicator();
+        }
+
+        function updateQueueIndicator() {
+            const qLabel = document.getElementById('queue-status-label');
+            if (!qLabel) return;
+            if (!audioEnabled) qLabel.textContent = 'Mode Senyap';
+            else if (isSpeaking) qLabel.textContent = `Bicara (${speechQueue.length} antre)`;
+            else qLabel.textContent = 'Antrean: Siap';
+        }
+
+        function showAnnouncementBanner(text) {
+            const banner = document.getElementById('live-announcement-banner');
+            const textEl = document.getElementById('announcement-banner-text');
+            if (textEl) textEl.textContent = text;
+            banner?.classList.remove('hidden');
+        }
+
+        function hideAnnouncementBanner() {
+            document.getElementById('live-announcement-banner')?.classList.add('hidden');
         }
     </script>
 </body>

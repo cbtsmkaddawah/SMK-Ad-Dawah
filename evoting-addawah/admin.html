@@ -80,6 +80,9 @@
                         <button class="admin-nav-link active" data-target="tabAnalytics">
                             <i class="bi bi-bar-chart-line-fill"></i> Hasil & Grafik Live
                         </button>
+                        <button class="admin-nav-link" data-target="tabBoothCaller">
+                            <i class="bi bi-megaphone-fill"></i> Pemanggil Bilik & Suara
+                        </button>
                         <button class="admin-nav-link" data-target="tabCandidates">
                             <i class="bi bi-person-vcard-fill"></i> Data Kandidat
                         </button>
@@ -92,6 +95,7 @@
                         <button class="admin-nav-link" data-target="tabSettings">
                             <i class="bi bi-palette-fill"></i> Kustomisasi Web
                         </button>
+
                     </nav>
                 </div>
 
@@ -236,6 +240,145 @@
 
                         <div class="row g-3" id="superAdminCandidatesAuditGrid">
                             <!-- Diisi dinamis oleh js/admin.js -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===================================================
+                     TAB BARU: PEMANGGIL BILIK DINAMIS & PENGATURAN SUARA LIVE
+                     =================================================== -->
+                <div id="tabBoothCaller" class="admin-tab-pane d-none">
+                    
+                    <!-- 1. STATUS KETERSEDIAAN BILIK DINAMIS (+ TAMBAH / HAPUS BILIK) -->
+                    <div class="glass-card p-4 mb-4">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                            <div>
+                                <h5 class="fw-bold mb-0 text-dark">
+                                    <i class="bi bi-laptop text-success me-2"></i>Status Bilik Laptop (Dinamis dari Database)
+                                </h5>
+                                <p class="text-secondary small mb-0">
+                                    Bilik otomatis kembali kosong saat siswa selesai mengirim suara. Klik <strong>+ Tambah Bilik</strong> untuk menambah laptop bilik.
+                                </p>
+                            </div>
+                            <button type="button" id="btnAddDynamicBooth" class="btn btn-emerald btn-sm px-3">
+                                <i class="bi bi-plus-circle-fill me-1"></i>Tambah Bilik Laptop
+                            </button>
+                        </div>
+
+                        <div class="row g-2" id="adminBoothsStripGrid">
+                            <!-- Diisi dinamis oleh js/admin.js -->
+                        </div>
+                    </div>
+
+                    <!-- 2. DAFTAR PEMILIH & PEMANGGIL (8 KOLOM) + PENGATURAN SUARA (4 KOLOM) -->
+                    <div class="row g-4 align-items-start">
+                        <!-- Kiri: Daftar Siswa & Tombol Panggil ke Bilik -->
+                        <div class="col-lg-8">
+                            <div class="glass-card p-4">
+                                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 pb-3 mb-3 border-bottom">
+                                    <div>
+                                        <h5 class="fw-bold mb-0 text-dark">Daftar Pemilih & Penempatan Bilik</h5>
+                                        <p class="text-secondary small mb-0">
+                                            Klik nomor bilik kosong untuk memanggil siswa ke layar <code>live.html</code> & mengisi otomatis form login di laptop bilik tersebut.
+                                        </p>
+                                    </div>
+                                    <span id="callerFilteredCount" class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2">
+                                        0 Pemilih
+                                    </span>
+                                </div>
+
+                                <!-- Pills Filter Kelas Dinamis -->
+                                <div class="d-flex flex-wrap gap-1 mb-3" id="callerClassPills"></div>
+
+                                <!-- Pencarian & Filter Status -->
+                                <div class="row g-2 mb-3">
+                                    <div class="col-md-7">
+                                        <input type="search" id="callerSearchInput" class="form-control form-control-sm" placeholder="Cari nama lengkap siswa atau guru...">
+                                    </div>
+                                    <div class="col-md-5">
+                                        <select id="callerStatusFilter" class="form-select form-select-sm">
+                                            <option value="ALL">Status: Semua Pemilih</option>
+                                            <option value="belum" selected>Belum Memilih (Siap Dipanggil)</option>
+                                            <option value="bilik">Sedang Dipanggil / Di Bilik</option>
+                                            <option value="sudah">Sudah Memilih (Otomatis Sinkron)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Tabel Pemilih -->
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Nama Pemilih</th>
+                                                <th>Kelas</th>
+                                                <th>Status</th>
+                                                <th class="text-end">Panggil ke Bilik Kosong</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="callerStudentsTbody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kanan: Pengaturan Redaksi & Kecepatan Suara untuk live.html -->
+                        <div class="col-lg-4">
+                            <div class="glass-card p-4 mb-3">
+                                <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                                    <div class="stat-icon bg-warning-subtle text-warning" style="width: 40px; height: 40px; font-size: 1.1rem;">
+                                        <i class="bi bi-volume-up-fill"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-dark">Pengaturan Suara TV Live</h6>
+                                        <small class="text-secondary">Berbunyi otomatis di <code>live.html</code></small>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold text-secondary">GAYA REDAKSI PENGUMUMAN</label>
+                                    <select id="adminVoiceStyle" class="form-select form-select-sm">
+                                        <option value="energik">Energik & Ramah (Rekomendasi Aula)</option>
+                                        <option value="formal">Formal & Singkat (Anti-Delay)</option>
+                                        <option value="santuy">Semangat & Kompetitif Antar-Kelas</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between small fw-bold text-secondary mb-1">
+                                        <span>KECEPATAN BICARA (RATE)</span>
+                                        <span id="adminVoiceRateLabel" class="text-success">1.15x (Sigap)</span>
+                                    </div>
+                                    <input type="range" id="adminVoiceRate" class="form-range" min="0.9" max="1.4" step="0.05" value="1.15">
+                                </div>
+
+                                <div class="d-grid gap-2 mb-3">
+                                    <button type="button" id="btnSaveVoiceConfig" class="btn btn-emerald btn-sm py-2">
+                                        <i class="bi bi-check2-circle me-1"></i>Simpan Pengaturan Suara
+                                    </button>
+                                </div>
+
+                                <div class="pt-3 border-top">
+                                    <span class="d-block small fw-bold text-secondary mb-2">TES SUARA KE LAYAR LIVE:</span>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" id="btnTestVoiceLogin" class="btn btn-outline-success btn-sm flex-grow-1 fw-bold">
+                                            <i class="bi bi-play-fill"></i> Tes Panggil
+                                        </button>
+                                        <button type="button" id="btnTestVoiceDone" class="btn btn-warning btn-sm flex-grow-1 fw-bold text-dark">
+                                            <i class="bi bi-play-fill"></i> Tes Selesai
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Info Katalog Redaksi -->
+                            <div class="glass-card p-3 small">
+                                <div class="fw-bold text-dark mb-2"><i class="bi bi-info-circle text-success me-1"></i>Alur Sinkronisasi Otomatis</div>
+                                <ul class="text-secondary ps-3 mb-0 space-y-1">
+                                    <li>Klik nomor <strong>Bilik</strong> $\rightarrow$ TV <code>live.html</code> memanggil nama siswa & laptop <code>?bilik=XX</code> otomatis mengisi Kelas & Nama (tetap bisa diubah).</li>
+                                    <li>Saat siswa klik <strong>Kirim Pilihan</strong> $\rightarrow$ Status di sini otomatis menjadi <strong>Sudah Memilih</strong>, bilik otomatis <strong>Kosong</strong>, dan TV membunyikan ucapan terima kasih.</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
