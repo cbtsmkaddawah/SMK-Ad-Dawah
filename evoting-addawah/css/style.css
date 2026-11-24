@@ -622,3 +622,109 @@ body.has-custom-bg::before {
     padding: 0.45rem 0.5rem;
     box-shadow: none !important;
 }
+
+/* ============================================================
+   PERINGKAT TOP 1-5 PER KATEGORI (DASHBOARD ADMIN)
+   ============================================================ */
+.top5-category-card {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e2f2ea;
+    box-shadow: 0 8px 24px -10px rgba(6, 78, 59, 0.08);
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.top5-card-header {
+    padding: 1.1rem 1.35rem;
+    background: linear-gradient(135deg, #f0fdf7 0%, #ffffff 100%);
+    border-bottom: 1px solid #e2f2ea;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.top5-list-item {
+    padding: 0.9rem 1.35rem;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    transition: background-color 0.2s ease;
+}
+
+.top5-list-item:last-child {
+    border-bottom: none;
+}
+
+.top5-list-item:hover {
+    background-color: #f8fafc;
+}
+
+.top5-rank-badge {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.85rem;
+}
+
+.top5-rank-1 {
+    background: #fef3c7;
+    color: #b45309;
+    border: 1.5px solid #fcd34d;
+}
+
+.top5-rank-2 {
+    background: #f1f5f9;
+    color: #334155;
+    border: 1.5px solid #cbd5e1;
+}
+
+.top5-rank-3 {
+    background: #ffedd5;
+    color: #9a3412;
+    border: 1.5px solid #fdba74;
+}
+
+.top5-rank-other {
+    background: #f8fafc;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+
+.top5-avatar {
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #d1fae5;
+    background: #f0fdf7;
+}
+
+.top5-bar-track {
+    height: 6px;
+    border-radius: 99px;
+    background: #eef2f6;
+    overflow: hidden;
+    margin-top: 0.4rem;
+}
+
+.top5-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--emerald-700) 0%, var(--emerald-400) 100%);
+    transition: width 0.5s ease;
+}
+
+.top5-bar-fill.is-first {
+    background: linear-gradient(90deg, var(--emerald-700) 0%, var(--gold-500) 100%);
+}

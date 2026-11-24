@@ -80,6 +80,9 @@
                         <button class="admin-nav-link active" data-target="tabAnalytics">
                             <i class="bi bi-bar-chart-line-fill"></i> Hasil & Grafik Live
                         </button>
+                        <button class="admin-nav-link" data-target="tabTopFive">
+                            <i class="bi bi-trophy-fill"></i> Peringkat Top 5
+                        </button>
                         <button class="admin-nav-link" data-target="tabBoothCaller">
                             <i class="bi bi-megaphone-fill"></i> Pemanggil Bilik & Suara
                         </button>
@@ -241,6 +244,38 @@
                         <div class="row g-3" id="superAdminCandidatesAuditGrid">
                             <!-- Diisi dinamis oleh js/admin.js -->
                         </div>
+                    </div>
+                </div>
+
+                <!-- ===================================================
+                     TAB BARU: PERINGKAT 1-5 PER KATEGORI
+                     =================================================== -->
+                <div id="tabTopFive" class="admin-tab-pane d-none">
+                    <!-- Header & Filter Kategori -->
+                    <div class="glass-card p-4 mb-4">
+                        <div class="row align-items-center justify-content-between g-3">
+                            <div class="col-12 col-lg-6">
+                                <h5 class="fw-bold text-dark mb-1">
+                                    <i class="bi bi-trophy-fill text-warning me-2"></i>Peringkat 1–5 per Kategori
+                                </h5>
+                                <p class="text-secondary small mb-0">
+                                    Menampilkan 5 kandidat dengan perolehan suara tertinggi hingga terendah pada masing-masing kategori secara otomatis.
+                                </p>
+                            </div>
+                            <div class="col-12 col-lg-6 d-flex flex-wrap justify-content-lg-end align-items-center gap-2">
+                                <select id="topFiveCategoryFilter" class="form-select form-select-sm" style="width: auto; min-width: 220px;">
+                                    <option value="ALL">Tampilkan Semua Kategori</option>
+                                </select>
+                                <button type="button" id="btnExportTopFiveExcel" class="btn btn-outline-emerald btn-sm px-3 py-2">
+                                    <i class="bi bi-file-earmark-spreadsheet-fill me-1"></i>Export Top 5 Excel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grid Kartu Kategori (Masing-masing berisi Peringkat 1-5) -->
+                    <div class="row g-4" id="topFiveRankingsContainer">
+                        <!-- Diisi dinamis oleh js/admin.js -->
                     </div>
                 </div>
 

@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initVoterCRUDAndExcel();
     initWebCustomizationSettings();
     initBoothCallerControls();
+    initTopFiveControls();
 });
 
 /* ============================================================
@@ -150,6 +151,8 @@ async function refreshAllAdminData() {
         updateSummaryStatCards();
         populateCategoryChartFilter();
         renderPodiumWinners();
+        populateTopFiveFilter();
+        renderTopFiveRankings();
         renderInteractiveChart();
         renderSuperAdminCandidateAudit();
         renderBoothCallerPanel();
@@ -1160,6 +1163,7 @@ function initAdminRealtimeSync() {
 
             updateSummaryStatCards();
             renderPodiumWinners();
+            renderTopFiveRankings();
             renderInteractiveChart();
             renderBoothCallerPanel();
             renderVotersTable();
@@ -1518,3 +1522,185 @@ window.deleteDynamicBooth = function (boothCode) {
         'btn-danger'
     );
 };
+
+/* ============================================================
+   9. MENU PERINGKAT 1-5 PER KATEGORI & EXPORT EXCEL TOP 5
+   ============================================================ */
+function initTopFiveControls() {
+    document.getElementById('topFiveCategoryFilter')?.addEventListener('change', () => {
+        renderTopFiveRankings();
+    });
+
+    document.getElementById('btnExportTopFiveExcel')?.addEventListener('click', exportTopFiveToExcel);
+}
+
+function populateTopFiveFilter() {
+    const select = document.getElementById('topFiveCategoryFilter');
+    if (!select) return;
+    const prevValue = select.value || 'ALL';
+
+    select.innerHTML = '<option value="ALL">Tampilkan Semua Kategori</option>';
+    adminCategories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.id;
+        opt.textContent = `Kategori: ${cat.name}`;
+        select.appendChild(opt);
+    });
+
+    if ([...select.options].some(o => o.value === prevValue)) {
+        select.value = prevValue;
+    }
+}
+
+/**
+ * Ambil urutan Top 5 kandidat (tertinggi ke terendah) untuk satu kategori
+ */
+function getTopFiveForCategory(categoryId) {
+    const ranked = adminCandidates.map(cand => ({
+        ...cand,
+        votes: getVotesCount(categoryId, cand.id)
+    })).sort((a, b) => {
+        if (b.votes !== a.votes) return b.votes - a.votes;
+        return (a.urutan || 999) - (b.urutan || 999);
+    });
+
+    const totalCategoryVotes = ranked.reduce((sum, item) => sum + item.votes, 0);
+    return {
+        topFive: ranked.slice(0, 5),
+        totalCategoryVotes
+    };
+}
+
+function renderTopFiveRankings() {
+    const container = document.getElementById('topFiveRankingsContainer');
+    if (!container) return;
+
+    if (adminCategories.length === 0 || adminCandidates.length === 0) {
+        container.innerHTML = `
+            <div class="col-12">
+                <div class="glass-card p-5 text-center text-muted small">
+                    Belum ada data kategori atau kandidat untuk ditampilkan.
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    const filterCatId = document.getElementById('topFiveCategoryFilter')?.value || 'ALL';
+    const categoriesToShow = filterCatId === 'ALL'
+        ? adminCategories
+        : adminCategories.filter(c => String(c.id) === String(filterCatId));
+
+    // Jika hanya memilih 1 kategori, tampilkan lebih lebar di tengah agar nyaman dipresentasikan
+    const colClass = categoriesToShow.length === 1 ? 'col-12 col-lg-8 mx-auto' : 'col-12 col-xl-6';
+
+    container.innerHTML = categoriesToShow.map(cat => {
+        const { topFive, totalCategoryVotes } = getTopFiveForCategory(cat.id);
+        const highestVoteInCat = topFive.length > 0 ? topFive[0].votes : 0;
+
+        const rowsHtml = topFive.map((cand, idx) => {
+            const rank = idx + 1;
+            const rankClass = rank === 1 ? 'top5-rank-1'
+                : rank === 2 ? 'top5-rank-2'
+                : rank === 3 ? 'top5-rank-3'
+                : 'top5-rank-other';
+
+            const pct = totalCategoryVotes > 0
+                ? ((cand.votes / totalCategoryVotes) * 100).toFixed(1)
+                : '0.0';
+
+            const barWidth = highestVoteInCat > 0
+                ? Math.round((cand.votes / highestVoteInCat) * 100)
+                : 0;
+
+            const avatar = cand.photo_url && cand.photo_url.trim() !== ''
+                ? cand.photo_url
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(cand.name)}&background=059669&color=fff&size=160`;
+
+            return `
+                <div class="top5-list-item">
+                    <span class="top5-rank-badge ${rankClass}">#${rank}</span>
+
+                    <img src="${AppUI.escapeHtml(avatar)}" alt="${AppUI.escapeHtml(cand.name)}" loading="lazy" class="top5-avatar">
+
+                    <div class="flex-grow-1 min-w-0">
+                        <div class="d-flex justify-content-between align-items-start gap-2">
+                            <div class="min-w-0">
+                                <div class="fw-bold text-dark lh-sm" style="font-size: 0.92rem; word-break: break-word;">
+                                    ${AppUI.escapeHtml(cand.name)}
+                                </div>
+                                <div class="text-muted small lh-sm mt-1" style="font-size: 0.78rem; word-break: break-word;">
+                                    ${AppUI.escapeHtml(cand.jabatan || '-')}
+                                </div>
+                            </div>
+                            <div class="text-end flex-shrink-0">
+                                <div class="fw-extrabold text-dark lh-1" style="font-size: 1rem;">
+                                    ${cand.votes} <span class="fw-normal text-muted" style="font-size: 0.72rem;">suara</span>
+                                </div>
+                                <div class="text-success fw-semibold mt-1" style="font-size: 0.72rem;">
+                                    ${pct}%
+                                </div>
+                            </div>
+                        </div>
+                        <div class="top5-bar-track">
+                            <div class="top5-bar-fill ${rank === 1 && cand.votes > 0 ? 'is-first' : ''}" style="width: ${barWidth}%;"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div class="${colClass}">
+                <div class="top5-category-card">
+                    <div class="top5-card-header">
+                        <div>
+                            <div class="text-uppercase fw-bold text-success" style="font-size: 0.7rem; letter-spacing: 0.04em;">
+                                Top 5 Kandidat
+                            </div>
+                            <h6 class="fw-extrabold text-dark mb-0 mt-1">${AppUI.escapeHtml(cat.name)}</h6>
+                        </div>
+                        <span class="badge bg-white text-dark border rounded-pill px-3 py-2 fw-bold">
+                            Total: ${totalCategoryVotes} Suara
+                        </span>
+                    </div>
+                    <div class="flex-grow-1">
+                        ${rowsHtml}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function exportTopFiveToExcel() {
+    if (adminCategories.length === 0) {
+        AppUI.toast('Belum ada data kategori untuk diekspor.', 'warning');
+        return;
+    }
+
+    const rows = [];
+    adminCategories.forEach(cat => {
+        const { topFive, totalCategoryVotes } = getTopFiveForCategory(cat.id);
+        topFive.forEach((cand, idx) => {
+            const pct = totalCategoryVotes > 0
+                ? ((cand.votes / totalCategoryVotes) * 100).toFixed(1) + '%'
+                : '0.0%';
+
+            rows.push({
+                Kategori: cat.name,
+                Peringkat: idx + 1,
+                Nama_Kandidat: cand.name,
+                Guru_Mapel_Jabatan: cand.jabatan || '-',
+                Jumlah_Suara: cand.votes,
+                Persentase: pct
+            });
+        });
+    });
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Peringkat_Top_5');
+    XLSX.writeFile(wb, `Peringkat_Top5_EVoting_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    AppUI.toast('Data Peringkat 1–5 per Kategori berhasil diekspor ke Excel!', 'success');
+}
